@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サポート / Support - Whirlick</title>
+<style>
+  :root {
+    --ink: #1c2230;
+    --sub: #4a5568;
+    --line: #e2e6ee;
+    --accent: #2f6fed;
+    --bg: #fbfcff;
+    --card: #ffffff;
+    --placeholder-bg: #fff7e6;
+    --placeholder-border: #e8b93a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN",
+                 "Hiragino Sans", "Yu Gothic", Meiryo, Arial, sans-serif;
+    line-height: 1.8;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 96px; }
+  header.top { margin-bottom: 40px; }
+  header.top .appname {
+    font-size: 14px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--accent); text-transform: uppercase;
+  }
+  h1 { font-size: 28px; margin: 8px 0 4px; letter-spacing: 0.01em; }
+  .meta { font-size: 13px; color: var(--sub); }
+  .lang-nav { margin-top: 20px; display: flex; gap: 16px; font-size: 13px; }
+  .lang-nav a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  .lang-nav a:hover { border-bottom-color: var(--accent); }
+
+  .site-nav {
+    margin-top: 16px; display: flex; gap: 4px; border-bottom: 1px solid var(--line);
+  }
+  .site-nav a {
+    padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--sub);
+    text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .site-nav a:hover { color: var(--ink); }
+  .site-nav a.current { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .placeholder-notice {
+    background: var(--placeholder-bg); border: 1px solid var(--placeholder-border);
+    border-radius: 8px; padding: 14px 18px; font-size: 13px; color: #5c4a12; margin-bottom: 36px;
+  }
+  .placeholder-notice strong { color: #8a5a00; }
+
+  section.lang-block { padding-top: 8px; }
+  section.lang-block + section.lang-block {
+    margin-top: 64px; padding-top: 48px; border-top: 1px solid var(--line);
+  }
+
+  h2 { font-size: 19px; margin: 40px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  h2:first-of-type { margin-top: 24px; }
+  h3 { font-size: 15px; margin: 22px 0 6px; }
+  p { margin: 0 0 14px; color: var(--ink); }
+  ul { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+
+  .faq-item { margin-bottom: 20px; }
+  .faq-q {
+    font-weight: 700; margin-bottom: 4px; display: flex; gap: 8px;
+  }
+  .faq-q .tag {
+    flex-shrink: 0; color: var(--accent);
+  }
+  .faq-a { color: var(--sub); }
+
+  .contact-box {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px 20px; margin: 12px 0 0;
+  }
+  .contact-box .placeholder {
+    display: inline-block; background: var(--placeholder-bg); border: 1px dashed var(--placeholder-border);
+    border-radius: 4px; padding: 2px 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px; color: #8a5a00;
+  }
+  footer.bottom {
+    margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--sub);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="appname">Whirlick</div>
+    <h1>サポート / Support</h1>
+    <div class="meta">最終更新日 / Last updated: 2026年8月3日 (August 3, 2026)</div>
+    <div class="lang-nav">
+      <a href="#ja">日本語</a>
+      <a href="#en">English</a>
+    </div>
+    <nav class="site-nav">
+      <a href="privacy.html">プライバシーポリシー</a>
+      <a href="support.html" class="current">サポート</a>
+      <a href="terms.html">利用規約</a>
+    </nav>
+  </header>
+
+  <div class="placeholder-notice">
+    <strong>公開前の確認事項:</strong> このページ内の「お問い合わせ先」は仮のプレースホルダーです。公開・App Store提出の前に、実際の連絡先に差し替えてください。/
+    <strong>Before publishing:</strong> the contact details below are placeholders. Replace them with real contact information before publishing or submitting to the App Store.
+  </div>
+
+  <!-- ============================= 日本語版 ============================= -->
+  <section class="lang-block" id="ja">
+
+    <h2>お問い合わせ</h2>
+    <div class="contact-box">
+      <p style="margin-bottom:0;">
+        不具合のご報告、ご意見・ご要望、その他お困りのことがございましたら、以下までご連絡ください。<br>
+        <span class="placeholder">contact@example.com (仮 - 差し替えてください)</span>
+      </p>
+    </div>
+
+    <h2>よくある質問</h2>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>ハイスコアや設定が消えてしまいました。</div>
+      <div class="faq-a">
+        ハイスコアや設定は端末内に保存されているため、アプリの削除(アンインストール)や端末の初期化を行うとデータは失われます。また、複数の端末間でのデータ引き継ぎには対応しておりません。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>広告が表示されません。</div>
+      <div class="faq-a">
+        プレミアムパックをご購入済みの場合、仕様として広告は表示されません。未購入の場合は、通信環境や広告在庫の状況により一時的に表示されないことがあります。しばらく時間をおいて再度お試しください。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>プレミアムパックを購入したのに反映されません。機種変更後にプレミアムが引き継がれません。</div>
+      <div class="faq-a">
+        設定画面の「購入の復元」をお試しください。同じApple IDでサインインしている環境であれば、購入状態を復元できます。復元後も反映されない場合は、購入日時と利用端末の情報を添えてお問い合わせください。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>ランキングに表示されている他の利用者の名前に、不適切な内容(誹謗中傷など)がありました。</div>
+      <div class="faq-a">
+        上記のお問い合わせ先まで、該当のプレイヤー名・モード・気づいた日時をお知らせください。確認の上、表示名の削除等の対応を行います。詳細は<a href="privacy.html">プライバシーポリシー</a>もご参照ください。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>動作が重い・フリーズする・落ちる。</div>
+      <div class="faq-a">
+        アプリの再起動、端末の再起動をお試しください。改善しない場合は、端末の機種名・OSのバージョン・発生した状況(どのモード・場面で起きたか)を添えてお問い合わせいただけますと、調査がスムーズです。
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>対応している端末・OSのバージョンを教えてください。</div>
+      <div class="faq-a">
+        App Storeの本アプリのページに記載の「必要システム」をご確認ください。
+      </div>
+    </div>
+
+    <h2>不具合のご報告について</h2>
+    <p>
+      不具合をご報告いただく際は、できるだけ以下の情報を添えていただけますと、原因の特定がスムーズになります。
+    </p>
+    <ul>
+      <li>端末の機種名(例:iPhone 14)</li>
+      <li>OSのバージョン</li>
+      <li>発生したモード・場面(タイトル画面、プレイ中、ランキング画面など)</li>
+      <li>発生した操作の手順や状況</li>
+    </ul>
+
+  </section>
+
+  <!-- ============================= English ============================= -->
+  <section class="lang-block" id="en">
+
+    <h2>Contact</h2>
+    <div class="contact-box">
+      <p style="margin-bottom:0;">
+        For bug reports, feedback, or any other issue, please contact us at:<br>
+        <span class="placeholder">contact@example.com (placeholder - replace before publishing)</span>
+      </p>
+    </div>
+
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>My high score or settings disappeared.</div>
+      <div class="faq-a">
+        High scores and settings are stored locally on your device. Uninstalling the App or resetting your device will erase this data. Data is not synced across multiple devices.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>Ads are not showing.</div>
+      <div class="faq-a">
+        If you've purchased the premium pack, ads are intentionally disabled. Otherwise, ads may occasionally fail to load due to network conditions or ad inventory availability — please try again after a while.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>I purchased the premium pack but it isn't reflected. Premium status didn't carry over to my new device.</div>
+      <div class="faq-a">
+        Please try "Restore Purchase" in the settings menu while signed in with the same Apple ID used for the original purchase. If it still isn't reflected, please contact us with your purchase date and device information.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>I saw an inappropriate player name on the leaderboard.</div>
+      <div class="faq-a">
+        Please contact us at the address above with the player name, mode, and approximate date you saw it. We will review and remove it if warranted. See also our <a href="privacy.html">Privacy Policy</a>.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>The app is slow, freezes, or crashes.</div>
+      <div class="faq-a">
+        Try restarting the App or your device. If the issue persists, please contact us with your device model, OS version, and a description of when the issue occurred to help us investigate.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><span class="tag">Q.</span>What devices and OS versions are supported?</div>
+      <div class="faq-a">
+        Please check the "Requires" section on the App's App Store page for supported requirements.
+      </div>
+    </div>
+
+    <h2>Reporting Bugs</h2>
+    <p>When reporting an issue, please include the following details if possible, so we can investigate faster:</p>
+    <ul>
+      <li>Device model (e.g., iPhone 14)</li>
+      <li>OS version</li>
+      <li>Mode/screen where the issue occurred (title screen, in-game, ranking screen, etc.)</li>
+      <li>Steps or circumstances leading to the issue</li>
+    </ul>
+
+  </section>
+
+  <footer class="bottom">
+    NIACraftive — Whirlick Support
+  </footer>
+
+</div>
+</body>
+</html>
