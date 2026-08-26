@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="パスサポート">
+<meta name="application-name" content="パスサポート">
+<meta name="theme-color" content="#f7f8fa">
+<meta name="format-detection" content="telephone=no">
+<title>シルバーパスサポート</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='48' fill='white' font-family='sans-serif' font-weight='700'%3E銀%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='48' fill='white' font-family='sans-serif' font-weight='700'%3E銀%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f7f8fa;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --accent-soft: #eff6ff;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --sunday: #e11d48;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  /* 長押しの範囲選択・コールアウトを抑制 */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  overscroll-behavior: none;
+}
+/* 入力欄だけは選択・編集可能に */
+input, textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default;
+}
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 56px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+header h1 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin: 0;
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP", Meiryo, sans-serif;
+  color: #1e3a5f;
+}
+.header-actions {
+  display: flex;
+  gap: 4px;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.icon-btn {
+  width: 40px; height: 40px;
+  border: none; background: transparent;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-btn:active { background: var(--border); }
+main { padding: 10px 12px; max-width: 480px; margin: 0 auto; }
+@media (min-width: 375px) {
+  main { padding: 10px 14px; }
+}
+
+.year-tabs, .month-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  padding: 4px 4px 8px;
+  margin: 0 -4px 4px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  align-items: flex-start;
+}
+.year-tabs::-webkit-scrollbar,
+.month-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+  ボタン要素のUAスタイルをリセットし、
+  幅・高さを px 固定（PC/スマホで同じ見た目）
+*/
+.year-tab,
+.month-tab {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  line-height: 1 !important;
+  font-family: inherit;
+  overflow: hidden !important;
+  flex-shrink: 0;
+  vertical-align: top;
+}
+
+/* 月ボタン: 全部同じサイズ（¥9,999 想定） */
+.month-tab {
+  flex: 0 0 84px !important;
+  width: 84px !important;
+  min-width: 84px !important;
+  max-width: 84px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+}
+
+/* 年ボタン: 全部同じサイズ */
+.year-tab {
+  flex: 0 0 100px !important;
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+}
+
+.year-tab .tab-label,
+.month-tab .tab-label {
+  display: block;
+  box-sizing: border-box;
+  height: 24px;
+  line-height: 24px;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-align: center;
+  max-width: 100%;
+}
+.year-tab .tab-yen,
+.month-tab .tab-yen {
+  display: block;
+  box-sizing: border-box;
+  height: 22px;
+  line-height: 22px;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  max-width: 100%;
+  opacity: 1;
+}
+
+.year-tab.empty,
+.month-tab.empty {
+  color: #b0b5be !important;
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+}
+.year-tab.empty .tab-yen,
+.month-tab.empty .tab-yen {
+  color: transparent !important;
+  opacity: 1 !important; /* 高さを維持 */
+}
+
+.year-tab.active,
+.month-tab.active {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+}
+.year-tab.empty.active,
+.month-tab.empty.active {
+  background: #93c5fd !important;
+  color: #fff !important;
+  border-color: #93c5fd !important;
+}
+.year-tab.empty.active .tab-yen,
+.month-tab.empty.active .tab-yen {
+  color: transparent !important;
+}
+
+.summary {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.summary-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.summary-label { font-size: 0.9rem; color: var(--muted); }
+.summary-count { font-size: 0.9rem; color: var(--muted); }
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-left: auto;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.entry-list { display: flex; flex-direction: column; gap: 8px; }
+.entry {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.entry:active { background: #f3f4f6; }
+.entry-date {
+  flex-shrink: 0;
+  width: 48px;
+  text-align: center;
+  line-height: 1.2;
+}
+.entry-date .day {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent);
+  display: block;
+}
+.entry-date .weekday {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.entry-date.sunday .day,
+.entry-date.sunday .weekday {
+  color: var(--sunday);
+}
+.entry-body { flex: 1; min-width: 0; }
+.entry-route {
+  font-size: 1.1rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entry-fare {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.fab {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  right: 16px;
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.4);
+  cursor: pointer;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fab:active { transform: scale(0.94); }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+.modal-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.modal {
+  background: var(--card);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px 24px;
+  max-height: 88dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.modal-header h2 { font-size: 1.2rem; font-weight: 700; }
+.modal-close {
+  width: 40px; height: 40px;
+  border: none;
+  background: var(--bg);
+  border-radius: 50%;
+  font-size: 1.15rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+.form-group { margin-bottom: 12px; }
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; min-width: 0; }
+input[type="date"],
+input[type="text"],
+input[type="number"],
+input[type="search"] {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+.station-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  background: var(--bg);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+.station-btn:active { background: #eee; }
+.station-btn .placeholder { color: #9ca3af; }
+.station-btn .chevron { color: var(--muted); font-size: 0.85rem; }
+
+.fare-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fare-row input {
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  min-width: 0;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.fare-step {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.fare-step:active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-row { display: flex; gap: 10px; margin-top: 8px; }
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:active { opacity: 0.9; }
+.btn-danger { background: var(--danger-soft); color: var(--danger); }
+.btn-ghost { background: var(--bg); color: var(--muted); }
+
+#stationModal .modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 85dvh;
+}
+.station-search-wrap { margin-bottom: 10px; flex-shrink: 0; }
+.station-section-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 10px 4px 6px;
+}
+.station-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 45dvh;
+}
+.station-item {
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.station-item:active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.station-item .badge {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+.station-custom-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+.station-custom-row input { flex: 1; }
+.station-custom-row .btn {
+  flex: 0 0 auto;
+  padding: 14px 18px;
+  width: auto;
+}
+.no-station {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 1rem;
+}
+.export-text {
+  width: 100%;
+  min-height: 180px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: ui-monospace, Menlo, monospace;
+  background: var(--bg);
+  resize: vertical;
+  line-height: 1.6;
+}
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  opacity: 0;
+  transition: all 0.25s;
+  z-index: 60;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.storage-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 8px 16px 0;
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>シルバーパスサポート</h1>
+  <div class="header-actions">
+    <button type="button" class="icon-btn" id="btnExport" aria-label="書き出し">📋</button>
+    <button type="button" class="icon-btn" id="btnImport" aria-label="取り込み">📥</button>
+  </div>
+</header>
+
+<main>
+  <div class="year-tabs" id="yearTabs"></div>
+  <div class="month-tabs" id="monthTabs"></div>
+  <div class="summary">
+    <div class="summary-left">
+      <div class="summary-label" id="summaryLabel">合計</div>
+      <div class="summary-count" id="summaryCount">0件</div>
+    </div>
+    <div class="summary-value" id="summaryValue">¥0</div>
+  </div>
+  <div class="entry-list" id="entryList"></div>
+  <p class="storage-note" id="storageNote" hidden>※この環境ではデータは一時保存のみです</p>
+</main>
+
+<button type="button" class="fab" id="btnAdd" aria-label="追加">＋</button>
+
+<div class="modal-overlay" id="formModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 id="formTitle">記録を追加</h2>
+      <button type="button" class="modal-close" id="formClose" aria-label="閉じる">✕</button>
+    </div>
+    <form id="entryForm">
+      <div class="form-group">
+        <label for="inputDate">日付</label>
+        <input type="date" id="inputDate" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>乗車</label>
+          <button type="button" class="station-btn" id="btnFrom">
+            <span class="placeholder" id="fromLabel">駅を選択</span>
+            <span class="chevron">▼</span>
+          </button>
+        </div>
+        <div class="form-group">
+          <label>降車</label>
+          <button type="button" class="station-btn" id="btnTo">
+            <span class="placeholder" id="toLabel">駅を選択</span>
+            <span class="chevron">▼</span>
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputFare">金額（円）</label>
+        <div class="fare-row">
+          <button type="button" class="fare-step" id="fareMinus" aria-label="減らす">−</button>
+          <input type="number" id="inputFare" placeholder="180" min="0" step="10" required inputmode="numeric">
+          <button type="button" class="fare-step" id="farePlus" aria-label="増やす">＋</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" id="formCancel">キャンセル</button>
+        <button type="submit" class="btn btn-primary">保存</button>
+      </div>
+      <div class="btn-row" id="deleteRow" hidden>
+        <button type="button" class="btn btn-danger" id="btnDelete">削除する</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="stationModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 id="stationTitle">駅を選択</h2>
+      <button type="button" class="modal-close" id="stationClose" aria-label="閉じる">✕</button>
+    </div>
+    <div class="station-search-wrap">
+      <input type="search" id="stationSearch" placeholder="駅名を検索…" autocomplete="off">
+    </div>
+    <div class="station-list" id="stationList"></div>
+    <div class="station-custom-row">
+      <input type="text" id="stationCustom" placeholder="一覧にない駅名" autocomplete="off">
+      <button type="button" class="btn btn-primary" id="btnCustomStation">決定</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="exportModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2>テキスト書き出し</h2>
+      <button type="button" class="modal-close" id="exportClose" aria-label="閉じる">✕</button>
+    </div>
+    <textarea class="export-text" id="exportText" readonly></textarea>
+    <div class="btn-row" style="margin-top:12px">
+      <button type="button" class="btn btn-primary" id="btnCopy">コピー</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="importModal">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2>テキスト取り込み</h2>
+      <button type="button" class="modal-close" id="importClose" aria-label="閉じる">✕</button>
+    </div>
+    <p style="font-size:0.9rem;color:var(--muted);margin-bottom:10px">
+      メモの形式（例: 10/02 巣鴨〜新板橋 180-）を貼り付けてください。
+    </p>
+    <textarea class="export-text" id="importText" placeholder="10/02 巣鴨〜新板橋 180-"></textarea>
+    <div class="btn-row" style="margin-top:12px">
+      <button type="button" class="btn btn-ghost" id="importCancel">キャンセル</button>
+      <button type="button" class="btn btn-primary" id="btnImportDo">取り込む</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "silverpass_entries_v1";
+  var RECENT_KEY = "silverpass_recent_stations_v1";
+  var SEED_FLAG = "silverpass_seeded_v1";
+  var WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
+  var SEED_ENTRIES = [
+    { id: "s01", date: "2025-10-02", from: "巣鴨", to: "新板橋", fare: 180 },
+    { id: "s02", date: "2025-10-04", from: "新板橋", to: "日比谷", fare: 280 },
+    { id: "s03", date: "2025-10-04", from: "日比谷", to: "新板橋", fare: 280 },
+    { id: "s04", date: "2025-10-06", from: "大塚", to: "荒川車庫", fare: 170 },
+    { id: "s05", date: "2025-10-07", from: "新板橋", to: "巣鴨", fare: 180 },
+    { id: "s06", date: "2025-10-10", from: "新板橋", to: "巣鴨", fare: 180 },
+    { id: "s07", date: "2025-10-13", from: "池袋パス", to: "", fare: 210 },
+    { id: "s08", date: "2025-10-13", from: "上池袋4丁目パス", to: "", fare: 210 },
+    { id: "s09", date: "2025-10-17", from: "都電大塚", to: "", fare: 170 },
+    { id: "s10", date: "2025-10-19", from: "新板橋", to: "日比谷", fare: 280 },
+    { id: "s11", date: "2025-10-19", from: "日比谷", to: "新板橋", fare: 280 },
+    { id: "s12", date: "2025-11-02", from: "新板橋", to: "三田", fare: 280 },
+    { id: "s13", date: "2025-11-02", from: "三田", to: "五反田", fare: 180 },
+    { id: "s14", date: "2025-11-02", from: "白金高輪", to: "新板橋", fare: 280 },
+    { id: "s15", date: "2025-11-12", from: "新板橋", to: "巣鴨", fare: 180 },
+    { id: "s16", date: "2025-11-12", from: "巣鴨", to: "西巣鴨", fare: 180 },
+    { id: "s17", date: "2025-11-12", from: "西巣鴨", to: "尾久", fare: 210 },
+    { id: "s18", date: "2025-11-14", from: "新板橋", to: "巣鴨", fare: 180 },
+    { id: "s19", date: "2025-11-20", from: "上池袋四丁目", to: "", fare: 210 },
+    { id: "s20", date: "2025-11-24", from: "新板橋", to: "本八幡", fare: 380 },
+    { id: "s21", date: "2025-11-26", from: "都電大塚", to: "荒川車庫", fare: 170 }
+  ];
+
+
+  // よく使う区間の運賃（双方向）— 過去入力からも学習する
+  // 過去入力から学習する運賃（優先）
+  var KNOWN_FARES = {
+    "巣鴨|新板橋": 180,
+    "新板橋|日比谷": 280,
+    "大塚|荒川車庫": 170,
+    "都電大塚|荒川車庫": 170,
+    "新板橋|三田": 280,
+    "三田|五反田": 180,
+    "白金高輪|新板橋": 280,
+    "巣鴨|西巣鴨": 180,
+    "西巣鴨|尾久": 210,
+    "新板橋|本八幡": 380,
+    "新板橋|巣鴨": 180
+  };
+
+  // ===== 公式運賃（大人・きっぷ10円単位）参考 =====
+  // 都電荒川線（東京さくらトラム）: 全線均一
+  var TODEN_FARE = 170;
+  var TODEN_STATIONS = [
+    "三ノ輪橋","荒川一中前","荒川区役所前","荒川二丁目","荒川七丁目",
+    "町屋駅前","町屋二丁目","東尾久三丁目","熊野前","宮ノ前",
+    "小台","荒川遊園地前","荒川車庫前","荒川車庫","梶原","栄町",
+    "王子駅前","飛鳥山","滝野川一丁目","西ヶ原四丁目","新庚申塚",
+    "庚申塚","巣鴨新田","大塚駅前","都電大塚","向原","東池袋四丁目",
+    "都電雑司ヶ谷","鬼子母神前","学習院下","面影橋","早稲田",
+    "巣鴨","西巣鴨","大塚","王子","尾久"
+  ];
+
+  // 日暮里・舎人ライナー: 駅順と概算キロ（日暮里起点）
+  // 運賃帯 きっぷ: 1-2km 170 / 3-4km 240 / 5-7km 290 / 8-10km 340
+  var NIPPORI_ORDER = [
+    "日暮里","西日暮里","赤土小学校前","熊野前","足立小台",
+    "扇大橋","高野","江北","西新井大師西","谷在家",
+    "舎人公園","舎人","見沼代親水公園"
+  ];
+  var NIPPORI_KM = [0, 0.7, 1.7, 2.5, 3.2, 4.0, 4.7, 5.5, 6.3, 7.1, 7.9, 8.7, 9.7];
+
+  function nipporiFare(km) {
+    if (km <= 0) return 170;
+    if (km <= 2) return 170;
+    if (km <= 4) return 240;
+    if (km <= 7) return 290;
+    return 340;
+  }
+
+  // 都営地下鉄 運賃帯（大人きっぷ）
+  function toeiFareByKm(km) {
+    if (km <= 0) return 180;
+    if (km <= 4) return 180;
+    if (km <= 9) return 220;
+    if (km <= 15) return 280;
+    if (km <= 21) return 330;
+    if (km <= 27) return 380;
+    return 430;
+  }
+
+  // 各路線の駅順（隣接約1.0〜1.2km想定でインデックス差×係数）
+  // 乗り換え駅は複数路線に登場
+  var TOEI_LINES = {
+    "浅草線": ["西馬込","馬込","中延","戸越","五反田","高輪台","泉岳寺","三田","大門","新橋","東銀座","宝町","日本橋","人形町","東日本橋","浅草橋","蔵前","浅草","本所吾妻橋","押上"],
+    "三田線": ["目黒","白金台","白金高輪","三田","芝公園","御成門","内幸町","日比谷","大手町","神保町","水道橋","春日","白山","千石","巣鴨","西巣鴨","新板橋","板橋区役所前","板橋本町","本蓮沼","志村坂上","志村三丁目","蓮根","西台","高島平","新高島平","西高島平"],
+    "新宿線": ["新宿","新宿三丁目","曙橋","市ヶ谷","九段下","神保町","小川町","岩本町","馬喰横山","浜町","森下","清澄白河","菊川","住吉","西大島","大島","東大島","船堀","一之江","瑞江","篠崎","本八幡"],
+    "大江戸線": ["都庁前","新宿西口","東新宿","若松河田","牛込柳町","牛込神楽坂","飯田橋","春日","本郷三丁目","上野御徒町","新御徒町","蔵前","両国","森下","清澄白河","門前仲町","月島","勝どき","築地市場","汐留","大門","赤羽橋","麻布十番","六本木","青山一丁目","国立競技場","代々木","新宿","都庁前","西新宿五丁目","中野坂上","東中野","中井","落合南長崎","新江古田","練馬","豊島園","練馬春日町","光が丘"]
+  };
+
+  // 駅名ゆれ（入力名 → 正規名）
+  var STATION_ALIAS = {
+    "都電大塚": "大塚駅前",
+    "荒川車庫": "荒川車庫前",
+    "上池袋4丁目": "東池袋四丁目",
+    "上池袋四丁目": "東池袋四丁目",
+    "池袋パス": "池袋",
+    "上池袋4丁目パス": "東池袋四丁目",
+    "巣鴨駅": "巣鴨",
+    "大塚駅": "大塚",
+    "王子駅": "王子駅前",
+    "板橋駅": "新板橋"
+  };
+
+  function normalizeStation(name) {
+    name = String(name || "").trim();
+    if (STATION_ALIAS[name]) return STATION_ALIAS[name];
+    return name;
+  }
+
+  function isTodenStation(name) {
+    return TODEN_STATIONS.indexOf(name) >= 0;
+  }
+
+  function nipporiIndex(name) {
+    return NIPPORI_ORDER.indexOf(name);
+  }
+
+  // 都営: 同一路線上の駅間インデックス差から概算km
+  function toeiApproxKm(a, b) {
+    var best = null;
+    Object.keys(TOEI_LINES).forEach(function (line) {
+      var arr = TOEI_LINES[line];
+      var i = arr.indexOf(a);
+      var j = arr.indexOf(b);
+      if (i < 0 || j < 0) return;
+      var hops = Math.abs(i - j);
+      // 大江戸は環状のため短い方
+      if (line === "大江戸線") {
+        hops = Math.min(hops, arr.length - hops);
+      }
+      var km = hops * 1.1; // 平均駅間の概算
+      if (best == null || km < best) best = km;
+    });
+    // 目黒〜白金高輪の特定区間
+    var special = ["目黒", "白金台", "白金高輪"];
+    if (special.indexOf(a) >= 0 && special.indexOf(b) >= 0) return 2;
+    return best;
+  }
+
+  // 路線運賃の自動判定
+  function networkFare(from, to) {
+    from = normalizeStation(from);
+    to = normalizeStation(to);
+    if (!from || !to || from === to) return null;
+
+    // 都電同士 → 均一170
+    if (isTodenStation(from) && isTodenStation(to)) return TODEN_FARE;
+
+    // 舎人ライナー同士
+    var ni = nipporiIndex(from);
+    var nj = nipporiIndex(to);
+    if (ni >= 0 && nj >= 0) {
+      var km = Math.abs(NIPPORI_KM[ni] - NIPPORI_KM[nj]);
+      if (km < 0.1) km = 1;
+      return nipporiFare(km);
+    }
+
+    // 都営地下鉄（同一路線で概算できた場合）
+    var tkm = toeiApproxKm(from, to);
+    if (tkm != null) return toeiFareByKm(tkm);
+
+    return null;
+  }
+
+  var DEFAULT_STATIONS = [
+    // 都電
+    "三ノ輪橋","荒川一中前","荒川区役所前","荒川二丁目","荒川七丁目",
+    "町屋駅前","町屋二丁目","東尾久三丁目","熊野前","宮ノ前",
+    "小台","荒川遊園地前","荒川車庫前","荒川車庫","梶原","栄町",
+    "王子駅前","飛鳥山","滝野川一丁目","西ヶ原四丁目","新庚申塚",
+    "庚申塚","巣鴨新田","大塚駅前","都電大塚","向原","東池袋四丁目",
+    "都電雑司ヶ谷","鬼子母神前","学習院下","面影橋","早稲田",
+    // 舎人ライナー
+    "日暮里","西日暮里","赤土小学校前","足立小台","扇大橋","高野",
+    "江北","西新井大師西","谷在家","舎人公園","舎人","見沼代親水公園",
+    // 浅草線
+    "西馬込","馬込","中延","戸越","五反田","高輪台","泉岳寺","三田",
+    "大門","新橋","東銀座","宝町","日本橋","人形町","東日本橋","浅草橋",
+    "蔵前","浅草","本所吾妻橋","押上",
+    // 三田線
+    "目黒","白金台","白金高輪","芝公園","御成門","内幸町","日比谷","大手町",
+    "神保町","水道橋","春日","白山","千石","巣鴨","西巣鴨","新板橋",
+    "板橋区役所前","板橋本町","本蓮沼","志村坂上","志村三丁目","蓮根",
+    "西台","高島平","新高島平","西高島平",
+    // 新宿線
+    "新宿","新宿三丁目","曙橋","市ヶ谷","九段下","小川町","岩本町",
+    "馬喰横山","浜町","森下","清澄白河","菊川","住吉","西大島","大島",
+    "東大島","船堀","一之江","瑞江","篠崎","本八幡",
+    // 大江戸線（主要）
+    "都庁前","新宿西口","東新宿","若松河田","牛込柳町","牛込神楽坂",
+    "飯田橋","本郷三丁目","上野御徒町","新御徒町","両国","門前仲町",
+    "月島","勝どき","築地市場","汐留","赤羽橋","麻布十番","六本木",
+    "青山一丁目","国立競技場","代々木","西新宿五丁目","中野坂上",
+    "東中野","中井","落合南長崎","新江古田","練馬","豊島園","練馬春日町","光が丘",
+    // その他よく使う
+    "池袋","上池袋4丁目","上池袋四丁目","大塚","尾久","王子","板橋",
+    "池袋パス","上池袋4丁目パス"
+  ];
+
+  var mem = {};
+  var canLS = false;
+  try {
+    var ls = window.localStorage;
+    ls.setItem("__sp_t", "1");
+    ls.removeItem("__sp_t");
+    canLS = true;
+  } catch (e) {
+    canLS = false;
+  }
+
+  function storageGet(key) {
+    if (canLS) {
+      try { return window.localStorage.getItem(key); }
+      catch (e) { return mem.hasOwnProperty(key) ? mem[key] : null; }
+    }
+    return mem.hasOwnProperty(key) ? mem[key] : null;
+  }
+  function storageSet(key, val) {
+    if (canLS) {
+      try { window.localStorage.setItem(key, val); return; }
+      catch (e) {}
+    }
+    mem[key] = val;
+  }
+
+  var entries = [];
+  var recentStations = [];
+  var currentYear = null;
+  var currentMonth = null; // 1-12
+  var editingId = null;
+  var stationTarget = null;
+  var valFrom = "";
+  var valTo = "";
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function fmtYen(n) {
+    return "¥" + Number(n).toLocaleString("ja-JP");
+  }
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function showToast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function () { t.classList.remove("show"); }, 1800);
+  }
+  function parseDateParts(ds) {
+    var d = new Date(ds + "T12:00:00");
+    return {
+      year: d.getFullYear(),
+      month: d.getMonth() + 1,
+      day: d.getDate(),
+      weekday: d.getDay() // 0=Sun
+    };
+  }
+  function routeText(e) {
+    if (e.to) return e.from + " ～ " + e.to;
+    return e.from;
+  }
+
+  function fareKey(a, b) {
+    return String(a).trim() + "|" + String(b).trim();
+  }
+
+  // 両方の駅が揃ったときだけ区間運賃を探す
+  function lookupFare(from, to) {
+    from = String(from || "").trim();
+    to = String(to || "").trim();
+    if (!from || !to) return null;
+
+    // 1) 過去の入力（同じ向きを優先）
+    for (var i = entries.length - 1; i >= 0; i--) {
+      var e = entries[i];
+      if (e.from === from && e.to === to && e.fare > 0) return e.fare;
+    }
+    // 2) 手入力で学習したテーブル
+    if (KNOWN_FARES[fareKey(from, to)] != null) return KNOWN_FARES[fareKey(from, to)];
+    // 3) 過去の入力（逆向き）
+    for (var j = entries.length - 1; j >= 0; j--) {
+      var e2 = entries[j];
+      if (e2.from === to && e2.to === from && e2.fare > 0) return e2.fare;
+    }
+    // 4) 学習テーブル（逆向き）
+    if (KNOWN_FARES[fareKey(to, from)] != null) return KNOWN_FARES[fareKey(to, from)];
+    // 5) 路線ネットワーク運賃（都電・舎人ライナー・都営）
+    var nf = networkFare(from, to);
+    if (nf != null) return nf;
+    return null;
+  }
+
+  function tryAutoFare() {
+    // 乗車・降車の両方が入ったタイミングのみ自動入力
+    if (!valFrom || !valTo) return;
+    var fare = lookupFare(valFrom, valTo);
+    if (fare != null) {
+      document.getElementById("inputFare").value = fare;
+    }
+  }
+
+  function rememberFare(from, to, fare) {
+    if (!from || !to || !fare) return;
+    KNOWN_FARES[fareKey(from, to)] = fare;
+  }
+
+  function minKnownFare() {
+    var min = null;
+    Object.keys(KNOWN_FARES).forEach(function (k) {
+      var v = KNOWN_FARES[k];
+      if (typeof v === "number" && v > 0 && (min == null || v < min)) min = v;
+    });
+    entries.forEach(function (e) {
+      if (e.fare > 0 && (min == null || e.fare < min)) min = e.fare;
+    });
+    return min != null ? min : 170;
+  }
+
+  function addRecent(name) {
+    if (!name) return;
+    recentStations = recentStations.filter(function (s) { return s !== name; });
+    recentStations.unshift(name);
+    if (recentStations.length > 30) recentStations.length = 30;
+    storageSet(RECENT_KEY, JSON.stringify(recentStations));
+  }
+
+  function load() {
+    try {
+      var raw = storageGet(STORAGE_KEY);
+      entries = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(entries)) entries = [];
+    } catch (e) { entries = []; }
+    try {
+      var r = storageGet(RECENT_KEY);
+      recentStations = r ? JSON.parse(r) : [];
+      if (!Array.isArray(recentStations)) recentStations = [];
+    } catch (e) { recentStations = []; }
+
+    if (!storageGet(SEED_FLAG) && entries.length === 0) {
+      entries = SEED_ENTRIES.map(function (e) {
+        return { id: e.id, date: e.date, from: e.from, to: e.to || "", fare: e.fare };
+      });
+      entries.forEach(function (e) {
+        addRecent(e.from);
+        if (e.to) addRecent(e.to);
+      });
+      save();
+      storageSet(SEED_FLAG, "1");
+    }
+    entries.forEach(function (e) {
+      if (e.from && recentStations.indexOf(e.from) < 0) recentStations.push(e.from);
+      if (e.to && recentStations.indexOf(e.to) < 0) recentStations.push(e.to);
+    });
+  }
+
+  function save() {
+    storageSet(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  function getYearList() {
+    var nowY = new Date().getFullYear();
+    var set = {};
+    // always include 2025, 2026, and current year
+    set[2025] = 1;
+    set[2026] = 1;
+    set[nowY] = 1;
+    // years that appear in data
+    entries.forEach(function (e) {
+      var y = parseInt(e.date.slice(0, 4), 10);
+      if (!isNaN(y)) set[y] = 1;
+    });
+    // from 2025 up to max(now, max data year)
+    var maxY = nowY;
+    Object.keys(set).forEach(function (y) {
+      var n = parseInt(y, 10);
+      if (n > maxY) maxY = n;
+    });
+    var list = [];
+    for (var y = 2025; y <= maxY; y++) list.push(y);
+    // if somehow empty
+    if (list.length === 0) list = [nowY];
+    return list;
+  }
+
+  function getAllStations() {
+    var set = {};
+    DEFAULT_STATIONS.forEach(function (s) { set[s] = 1; });
+    recentStations.forEach(function (s) { set[s] = 1; });
+    entries.forEach(function (e) {
+      if (e.from) set[e.from] = 1;
+      if (e.to) set[e.to] = 1;
+    });
+    return Object.keys(set).sort(function (a, b) {
+      return a.localeCompare(b, "ja");
+    });
+  }
+
+  function monthTotal(year, month) {
+    var total = 0;
+    var prefix = year + "-" + (month < 10 ? "0" : "") + month;
+    entries.forEach(function (e) {
+      if (e.date.indexOf(prefix) === 0) total += e.fare;
+    });
+    return total;
+  }
+
+  function monthHasData(year, month) {
+    var prefix = year + "-" + (month < 10 ? "0" : "") + month;
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].date.indexOf(prefix) === 0) return true;
+    }
+    return false;
+  }
+
+  function filteredEntries() {
+    if (!currentYear || !currentMonth) return [];
+    var prefix =
+      currentYear +
+      "-" +
+      (currentMonth < 10 ? "0" : "") +
+      currentMonth;
+    var list = entries.filter(function (e) {
+      return e.date.indexOf(prefix) === 0;
+    });
+    // 日付の若い順（昇順）
+    list.sort(function (a, b) {
+      var c = a.date.localeCompare(b.date);
+      return c !== 0 ? c : a.id.localeCompare(b.id);
+    });
+    return list;
+  }
+
+  function ensureSelection() {
+    var years = getYearList();
+    if (!currentYear || years.indexOf(currentYear) < 0) {
+      // prefer year that has data, else current calendar year, else last in list
+      var nowY = new Date().getFullYear();
+      var withData = null;
+      for (var i = years.length - 1; i >= 0; i--) {
+        for (var m = 12; m >= 1; m--) {
+          if (monthHasData(years[i], m)) {
+            withData = years[i];
+            break;
+          }
+        }
+        if (withData) break;
+      }
+      currentYear = withData || (years.indexOf(nowY) >= 0 ? nowY : years[years.length - 1]);
+    }
+    if (!currentMonth || currentMonth < 1 || currentMonth > 12) {
+      var now = new Date();
+      var prefer = currentYear === now.getFullYear() ? now.getMonth() + 1 : 1;
+      // if selected year has data, jump to latest month with data
+      for (var m = 12; m >= 1; m--) {
+        if (monthHasData(currentYear, m)) {
+          prefer = m;
+          break;
+        }
+      }
+      currentMonth = prefer;
+    }
+  }
+
+  function render() {
+    ensureSelection();
+    renderYearTabs();
+    renderMonthTabs();
+    var list = filteredEntries();
+    renderSummary(list);
+    renderList(list);
+  }
+
+  function yearHasData(year) {
+    var prefix = String(year) + "-";
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].date.indexOf(prefix) === 0) return true;
+    }
+    return false;
+  }
+
+  function yearTotal(year) {
+    var total = 0;
+    var prefix = String(year) + "-";
+    entries.forEach(function (e) {
+      if (e.date.indexOf(prefix) === 0) total += e.fare;
+    });
+    return total;
+  }
+
+  function renderYearTabs() {
+    var years = getYearList();
+    var html = "";
+    years.forEach(function (y) {
+      var total = yearTotal(y);
+      var has = total > 0;
+      html +=
+        '<button type="button" class="year-tab' +
+        (currentYear === y ? " active" : "") +
+        (has ? "" : " empty") +
+        '" data-year="' +
+        y +
+        '"><span class="tab-label">' +
+        y +
+        '年</span><span class="tab-yen">' +
+        (has ? fmtYen(total) : "¥0") +
+        "</span></button>";
+    });
+    document.getElementById("yearTabs").innerHTML = html;
+    setTimeout(function () {
+      var el = document.querySelector("#yearTabs .year-tab.active");
+      if (el && el.scrollIntoView) {
+        try {
+          el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        } catch (e) {}
+      }
+    }, 0);
+  }
+
+  function renderMonthTabs() {
+    var html = "";
+    for (var m = 1; m <= 12; m++) {
+      var total = monthTotal(currentYear, m);
+      var has = total > 0;
+      var active = currentMonth === m ? " active" : "";
+      var emptyCls = has ? "" : " empty";
+      html +=
+        '<button type="button" class="month-tab' +
+        active +
+        emptyCls +
+        '" data-month="' +
+        m +
+        '"><span class="tab-label">' +
+        m +
+        '月</span><span class="tab-yen">' +
+        (has ? fmtYen(total) : "¥0") +
+        "</span></button>";
+    }
+    document.getElementById("monthTabs").innerHTML = html;
+    setTimeout(function () {
+      var el = document.querySelector("#monthTabs .month-tab.active");
+      if (el && el.scrollIntoView) {
+        try {
+          el.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        } catch (e) {}
+      }
+    }, 0);
+  }
+
+  function renderSummary(list) {
+    var total = 0;
+    list.forEach(function (e) { total += e.fare; });
+    document.getElementById("summaryLabel").textContent =
+      currentYear + "年" + currentMonth + "月分";
+    document.getElementById("summaryValue").textContent = fmtYen(total);
+    document.getElementById("summaryCount").textContent = list.length + "件";
+  }
+
+  function renderList(list) {
+    var el = document.getElementById("entryList");
+    if (list.length === 0) {
+      el.innerHTML =
+        '<div class="empty">この月の記録はありません<br>右下の ＋ から追加できます</div>';
+      return;
+    }
+    var html = "";
+    list.forEach(function (e) {
+      var p = parseDateParts(e.date);
+      var isSun = p.weekday === 0;
+      var wd = "（" + WEEKDAYS[p.weekday] + "）";
+      html +=
+        '<div class="entry" data-id="' +
+        escapeHtml(e.id) +
+        '">' +
+        '<div class="entry-date' +
+        (isSun ? " sunday" : "") +
+        '">' +
+        '<span class="day">' +
+        p.day +
+        "</span>" +
+        '<span class="weekday">' +
+        wd +
+        "</span></div>" +
+        '<div class="entry-body"><div class="entry-route">' +
+        escapeHtml(routeText(e)) +
+        "</div></div>" +
+        '<div class="entry-fare">' +
+        fmtYen(e.fare) +
+        "</div></div>";
+    });
+    el.innerHTML = html;
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add("open");
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("open");
+  }
+
+  function updateStationBtn(target, name) {
+    var el = document.getElementById(target === "from" ? "fromLabel" : "toLabel");
+    if (name) {
+      el.textContent = name;
+      el.classList.remove("placeholder");
+    } else {
+      el.textContent = "駅を選択";
+      el.classList.add("placeholder");
+    }
+  }
+
+  function openAdd() {
+    editingId = null;
+    valFrom = "";
+    valTo = "";
+    document.getElementById("formTitle").textContent = "記録を追加";
+    var d = new Date();
+    if (currentYear && currentMonth) {
+      var day = d.getFullYear() === currentYear && d.getMonth() + 1 === currentMonth
+        ? d.getDate()
+        : 1;
+      var mm = currentMonth < 10 ? "0" + currentMonth : String(currentMonth);
+      var dd = day < 10 ? "0" + day : String(day);
+      document.getElementById("inputDate").value =
+        currentYear + "-" + mm + "-" + dd;
+    } else {
+      document.getElementById("inputDate").value = d.toISOString().slice(0, 10);
+    }
+    updateStationBtn("from", "");
+    updateStationBtn("to", "");
+    document.getElementById("inputFare").value = "";
+    document.getElementById("deleteRow").hidden = true;
+    openModal("formModal");
+  }
+
+  function openEdit(id) {
+    var e = null;
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].id === id) { e = entries[i]; break; }
+    }
+    if (!e) return;
+    editingId = id;
+    valFrom = e.from;
+    valTo = e.to || "";
+    document.getElementById("formTitle").textContent = "記録を編集";
+    document.getElementById("inputDate").value = e.date;
+    updateStationBtn("from", e.from);
+    updateStationBtn("to", e.to || "");
+    document.getElementById("inputFare").value = e.fare;
+    document.getElementById("deleteRow").hidden = false;
+    openModal("formModal");
+  }
+
+  function closeForm() { closeModal("formModal"); }
+
+  function submitForm(ev) {
+    ev.preventDefault();
+    var date = document.getElementById("inputDate").value;
+    var from = valFrom;
+    var to = valTo;
+    var fare = parseInt(document.getElementById("inputFare").value, 10);
+    if (!date || !from || isNaN(fare)) {
+      showToast("日付・乗車駅・金額を入力してください");
+      return;
+    }
+    if (editingId) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].id === editingId) {
+          entries[i] = { id: entries[i].id, date: date, from: from, to: to, fare: fare };
+          break;
+        }
+      }
+      showToast("更新しました");
+    } else {
+      entries.push({ id: uid(), date: date, from: from, to: to, fare: fare });
+      showToast("追加しました");
+    }
+    var p = parseDateParts(date);
+    currentYear = p.year;
+    currentMonth = p.month;
+    addRecent(from);
+    if (to) addRecent(to);
+    rememberFare(from, to, fare);
+    save();
+    closeForm();
+    render();
+  }
+
+  function deleteEntry() {
+    if (!editingId) return;
+    if (!window.confirm("この記録を削除しますか？")) return;
+    entries = entries.filter(function (x) { return x.id !== editingId; });
+    save();
+    closeForm();
+    showToast("削除しました");
+    render();
+  }
+
+  function toHiragana(s) {
+    return String(s)
+      .replace(/[\u30A1-\u30F6]/g, function (ch) {
+        return String.fromCharCode(ch.charCodeAt(0) - 0x60);
+      })
+      .toLowerCase();
+  }
+  function matchKana(str, q) {
+    if (!q) return true;
+    return toHiragana(str).indexOf(toHiragana(q)) >= 0;
+  }
+
+  function openStationPicker(target) {
+    stationTarget = target;
+    document.getElementById("stationTitle").textContent =
+      target === "from" ? "乗車駅を選択" : "降車駅を選択";
+    document.getElementById("stationSearch").value = "";
+    document.getElementById("stationCustom").value = "";
+    renderStationList("");
+    openModal("stationModal");
+    setTimeout(function () {
+      try { document.getElementById("stationSearch").focus(); } catch (e) {}
+    }, 200);
+  }
+  function closeStationPicker() {
+    closeModal("stationModal");
+    stationTarget = null;
+  }
+  function selectStation(name) {
+    if (!stationTarget || !name) return;
+    name = String(name).trim();
+    if (!name) return;
+    if (stationTarget === "from") {
+      valFrom = name;
+      updateStationBtn("from", name);
+    } else {
+      valTo = name;
+      updateStationBtn("to", name);
+    }
+    addRecent(name);
+    closeStationPicker();
+    tryAutoFare();
+  }
+  function renderStationList(query) {
+    var q = (query || "").trim().toLowerCase();
+    var listEl = document.getElementById("stationList");
+    var html = "";
+    var recent = recentStations.filter(function (s) {
+      return !q || s.toLowerCase().indexOf(q) >= 0 || matchKana(s, q);
+    });
+    if (recent.length > 0 && (!q || recent.length <= 15)) {
+      html += '<div class="station-section-label">最近使った駅</div>';
+      recent.slice(0, 12).forEach(function (s) {
+        html +=
+          '<div class="station-item" data-name="' +
+          escapeHtml(s) +
+          '"><span>' +
+          escapeHtml(s) +
+          '</span><span class="badge">最近</span></div>';
+      });
+    }
+    var all = getAllStations().filter(function (s) {
+      if (!q && recent.indexOf(s) >= 0) return false;
+      if (!q) return true;
+      return s.toLowerCase().indexOf(q) >= 0 || matchKana(s, q);
+    });
+    if (all.length > 0) {
+      html +=
+        '<div class="station-section-label">' +
+        (q ? "検索結果" : "駅一覧") +
+        "</div>";
+      var show = q ? all.slice(0, 40) : all.slice(0, 50);
+      show.forEach(function (s) {
+        html +=
+          '<div class="station-item" data-name="' +
+          escapeHtml(s) +
+          '"><span>' +
+          escapeHtml(s) +
+          "</span></div>";
+      });
+      if (!q && all.length > 50) {
+        html += '<div class="no-station">検索するとさらに表示されます</div>';
+      }
+    }
+    if (!html) {
+      html =
+        '<div class="no-station">該当する駅がありません<br>下の欄から直接入力できます</div>';
+    }
+    listEl.innerHTML = html;
+  }
+
+  function buildExportText() {
+    var years = getYearList();
+    var lines = [];
+    years.forEach(function (year) {
+      for (var m = 1; m <= 12; m++) {
+        var prefix = year + "-" + (m < 10 ? "0" : "") + m;
+        var list = entries
+          .filter(function (e) { return e.date.indexOf(prefix) === 0; })
+          .sort(function (a, b) { return a.date.localeCompare(b.date); });
+        if (list.length === 0) continue;
+        list.forEach(function (e) {
+          var p = parseDateParts(e.date);
+          var label =
+            (p.month < 10 ? "0" : "") +
+            p.month +
+            "/" +
+            (p.day < 10 ? "0" : "") +
+            p.day;
+          var route = e.to ? e.from + "〜" + e.to : e.from;
+          lines.push(label + " " + route + " " + e.fare + "-");
+        });
+        var total = 0;
+        list.forEach(function (e) { total += e.fare; });
+        lines.push(m + "月分 " + fmtYen(total) + "-");
+        lines.push("");
+      }
+    });
+    return lines.join("\n").trim();
+  }
+
+  function openExport() {
+    document.getElementById("exportText").value =
+      buildExportText() || "（データなし）";
+    openModal("exportModal");
+  }
+  function copyExport() {
+    var ta = document.getElementById("exportText");
+    ta.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(
+        function () { showToast("コピーしました"); },
+        function () { showToast("コピーに失敗しました"); }
+      );
+    } else {
+      try {
+        document.execCommand("copy");
+        showToast("コピーしました");
+      } catch (e) {
+        showToast("コピーに失敗しました");
+      }
+    }
+  }
+  function openImport() {
+    document.getElementById("importText").value = "";
+    openModal("importModal");
+  }
+  function parseImport(text) {
+    var lines = text.split(/\r?\n/);
+    var year = currentYear || new Date().getFullYear();
+    var added = [];
+    for (var i = 0; i < lines.length; i++) {
+      var t = lines[i].trim();
+      if (!t || /月分/.test(t)) continue;
+      var m = t.match(/^(\d{1,2})[\/,\-](\d{1,2})\s+(.+?)\s+(\d+)\s*-?\s*$/);
+      if (!m) continue;
+      var month = parseInt(m[1], 10);
+      var day = parseInt(m[2], 10);
+      var rest = m[3].trim();
+      var fare = parseInt(m[4], 10);
+      if (month < 1 || month > 12 || day < 1 || day > 31 || isNaN(fare)) continue;
+      var from = rest;
+      var to = "";
+      var sep = rest.indexOf("〜");
+      if (sep < 0) sep = rest.indexOf("～");
+      if (sep >= 0) {
+        from = rest.slice(0, sep).trim();
+        to = rest.slice(sep + 1).trim();
+      }
+      var date =
+        year +
+        "-" +
+        (month < 10 ? "0" : "") +
+        month +
+        "-" +
+        (day < 10 ? "0" : "") +
+        day;
+      added.push({ id: uid(), date: date, from: from, to: to, fare: fare });
+      addRecent(from);
+      if (to) addRecent(to);
+    }
+    return added;
+  }
+  function doImport() {
+    var added = parseImport(document.getElementById("importText").value);
+    if (added.length === 0) {
+      showToast("取り込める行がありません");
+      return;
+    }
+    entries = entries.concat(added);
+    save();
+    var p = parseDateParts(added[added.length - 1].date);
+    currentYear = p.year;
+    currentMonth = p.month;
+    closeModal("importModal");
+    showToast(added.length + "件取り込みました");
+    render();
+  }
+
+  function on(el, ev, fn) {
+    el.addEventListener(ev, fn, false);
+  }
+
+  function stepFare(delta) {
+    var input = document.getElementById("inputFare");
+    var minF = minKnownFare();
+    var v = parseInt(input.value, 10);
+    if (isNaN(v) || input.value === "") {
+      v = minF;
+      if (delta < 0) {
+        input.value = v;
+        return;
+      }
+    }
+    v = v + delta;
+    if (v < minF) v = minF;
+    input.value = v;
+  }
+  on(document.getElementById("fareMinus"), "click", function () { stepFare(-10); });
+  on(document.getElementById("farePlus"), "click", function () { stepFare(10); });
+
+  on(document.getElementById("btnAdd"), "click", openAdd);
+  on(document.getElementById("formClose"), "click", closeForm);
+  on(document.getElementById("formCancel"), "click", closeForm);
+  on(document.getElementById("entryForm"), "submit", submitForm);
+  on(document.getElementById("btnDelete"), "click", deleteEntry);
+  on(document.getElementById("btnFrom"), "click", function () { openStationPicker("from"); });
+  on(document.getElementById("btnTo"), "click", function () { openStationPicker("to"); });
+  on(document.getElementById("stationClose"), "click", closeStationPicker);
+  on(document.getElementById("stationSearch"), "input", function () {
+    renderStationList(this.value);
+  });
+  on(document.getElementById("btnCustomStation"), "click", function () {
+    var v = document.getElementById("stationCustom").value.trim();
+    if (v) selectStation(v);
+    else showToast("駅名を入力してください");
+  });
+  on(document.getElementById("stationCustom"), "keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      document.getElementById("btnCustomStation").click();
+    }
+  });
+  on(document.getElementById("btnExport"), "click", openExport);
+  on(document.getElementById("exportClose"), "click", function () { closeModal("exportModal"); });
+  on(document.getElementById("btnCopy"), "click", copyExport);
+  on(document.getElementById("btnImport"), "click", openImport);
+  on(document.getElementById("importClose"), "click", function () { closeModal("importModal"); });
+  on(document.getElementById("importCancel"), "click", function () { closeModal("importModal"); });
+  on(document.getElementById("btnImportDo"), "click", doImport);
+
+  on(document.getElementById("yearTabs"), "click", function (e) {
+    var btn = e.target.closest(".year-tab");
+    if (!btn) return;
+    currentYear = parseInt(btn.getAttribute("data-year"), 10);
+    // keep month if possible; if no data stay on same month number
+    render();
+  });
+  on(document.getElementById("monthTabs"), "click", function (e) {
+    var btn = e.target.closest(".month-tab");
+    if (!btn) return;
+    currentMonth = parseInt(btn.getAttribute("data-month"), 10);
+    render();
+  });
+  on(document.getElementById("entryList"), "click", function (e) {
+    var row = e.target.closest(".entry");
+    if (!row) return;
+    openEdit(row.getAttribute("data-id"));
+  });
+  on(document.getElementById("stationList"), "click", function (e) {
+    var item = e.target.closest(".station-item");
+    if (!item) return;
+    selectStation(item.getAttribute("data-name"));
+  });
+
+  ["formModal", "stationModal", "exportModal", "importModal"].forEach(function (id) {
+    on(document.getElementById(id), "click", function (e) {
+      if (e.target.id === id) closeModal(id);
+    });
+  });
+
+  // 年月タブ: スマホはスワイプ、PCはマウスドラッグ／横ホイールでスクロール
+  function enableSwipeScroll(el) {
+    if (!el) return;
+    var startX = 0, startLeft = 0, moved = false, dragging = false;
+
+    // --- タッチ ---
+    el.addEventListener("touchstart", function (e) {
+      if (!e.touches || !e.touches[0]) return;
+      startX = e.touches[0].clientX;
+      startLeft = el.scrollLeft;
+      moved = false;
+    }, { passive: true });
+    el.addEventListener("touchmove", function (e) {
+      if (!e.touches || !e.touches[0]) return;
+      var dx = e.touches[0].clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      el.scrollLeft = startLeft - dx;
+    }, { passive: true });
+
+    // --- マウスドラッグ（PC） ---
+    el.addEventListener("mousedown", function (e) {
+      if (e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      startX = e.clientX;
+      startLeft = el.scrollLeft;
+      el.style.cursor = "grabbing";
+      e.preventDefault();
+    });
+    window.addEventListener("mousemove", function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      el.scrollLeft = startLeft - dx;
+    });
+    window.addEventListener("mouseup", function () {
+      if (!dragging) return;
+      dragging = false;
+      el.style.cursor = "";
+    });
+
+    // ドラッグ後の誤クリック防止
+    el.addEventListener("click", function (e) {
+      if (moved) {
+        e.preventDefault();
+        e.stopPropagation();
+        moved = false;
+      }
+    }, true);
+
+    // トラックパッド／マウスホイールの横スクロール
+    el.addEventListener("wheel", function (e) {
+      // 縦ホイールを横スクロールに変換（Shiftなしでも）
+      var dx = e.deltaX;
+      var dy = e.deltaY;
+      if (Math.abs(dx) < Math.abs(dy)) dx = dy;
+      if (dx !== 0) {
+        el.scrollLeft += dx;
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    el.style.cursor = "grab";
+  }
+  enableSwipeScroll(document.getElementById("yearTabs"));
+  enableSwipeScroll(document.getElementById("monthTabs"));
+
+  // 長押しメニュー・選択を抑制（入力欄以外）
+  document.addEventListener("contextmenu", function (e) {
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+    e.preventDefault();
+  }, true);
+  document.addEventListener("selectstart", function (e) {
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+    e.preventDefault();
+  }, true);
+
+
+  load();
+  if (!canLS) {
+
+    var note = document.getElementById("storageNote");
+    if (note) note.hidden = false;
+  }
+  render();
+})();
+</script>
+</body>
+</html>
