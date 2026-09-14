@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111">
+<title>心電図メモ</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#111;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Noto Sans",sans-serif}
+main{max-width:620px;margin:auto;padding:18px 14px 32px}
+h1{text-align:center;font-size:22px;margin:4px 0 2px}
+.sub{text-align:center;color:#999;font-size:12px;margin-bottom:18px}
+.clock{text-align:center;background:#1d1d1d;border-radius:18px;padding:15px 10px;margin-bottom:14px}
+.time{font-size:42px;font-weight:700;letter-spacing:1px}
+.date{color:#aaa;font-size:13px;margin-top:2px}
+.inputbox{display:flex;gap:8px;margin-bottom:10px}
+input{flex:1;min-width:0;background:#222;color:#fff;border:1px solid #444;border-radius:12px;padding:14px;font-size:16px}
+button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:600;color:#fff;background:#333}
+button:active{transform:scale(.97)}
+.record{background:#fff;color:#111;padding:14px 16px;border-radius:13px;font-size:17px;font-weight:700;flex:0 0 78px}
+.presets{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}
+.presets button{padding:11px 4px;font-size:13px}
+.symptoms{background:#181818;border:1px solid #292929;border-radius:14px;padding:10px;margin-bottom:16px}
+.symptoms-title{font-size:13px;color:#aaa;margin:0 0 8px}
+.symptoms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.symptom{background:#292929}
+.symptom.active{background:#555}
+.section-title{font-size:14px;color:#aaa;margin:15px 2px 8px}
+.log{display:flex;flex-direction:column;gap:7px}
+.item{display:flex;align-items:center;gap:10px;background:#1d1d1d;border-radius:11px;padding:11px 12px}
+.item-time{font-variant-numeric:tabular-nums;color:#aaa;font-size:13px;width:48px;flex:none}
+.item-text{flex:1;word-break:break-word}
+.del{padding:5px 8px;background:#292929;color:#999;font-size:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:16px}
+.actions button{background:#252525}
+.note{font-size:11px;color:#777;text-align:center;margin-top:15px;line-height:1.5}
+.empty{text-align:center;color:#666;padding:30px 10px;background:#181818;border-radius:12px}
+@media(max-width:380px){.presets{grid-template-columns:repeat(3,1fr)}.time{font-size:36px}.symptoms-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<main>
+<h1>心電図メモ</h1>
+<div class="sub">24時間心電図 記録用</div>
+
+<div class="clock">
+  <div class="time" id="clock">--:--:--</div>
+  <div class="date" id="date">----</div>
+</div>
+
+<div class="inputbox">
+  <input id="memo" type="text" maxlength="100" placeholder="何をしていた？" autocomplete="off">
+  <button class="record" onclick="addMemo()">記録</button>
+</div>
+
+<div class="presets">
+  <button onclick="quick('起床')">起床</button>
+  <button onclick="quick('就寝')">就寝</button>
+  <button onclick="quick('食事')">食事</button>
+  <button onclick="quick('トイレ')">トイレ</button>
+  <button onclick="quick('歩く')">歩く</button>
+  <button onclick="quick('座る')">座る</button>
+  <button onclick="quick('PC作業')">PC作業</button>
+  <button onclick="quick('テレビ')">テレビ</button>
+  <button onclick="quick('入浴')">入浴</button>
+  <button onclick="quick('外出')">外出</button>
+  <button onclick="quick('薬')">薬</button>
+  <button onclick="quick('その他')">その他</button>
+</div>
+
+<div class="symptoms">
+  <div class="symptoms-title">症状があるとき</div>
+  <div class="symptoms-grid">
+    <button class="symptom" onclick="quick('動悸')">動悸</button>
+    <button class="symptom" onclick="quick('めまい')">めまい</button>
+    <button class="symptom" onclick="quick('息苦しい')">息苦しい</button>
+    <button class="symptom" onclick="quick('胸の違和感')">胸の違和感</button>
+    <button class="symptom" onclick="quick('胸痛')">胸痛</button>
+    <button class="symptom" onclick="quick('その他の症状')">その他の症状</button>
+  </div>
+</div>
+
+<div class="section-title">記録 <span id="count"></span></div>
+<div id="log" class="log"></div>
+
+<div class="actions">
+  <button onclick="exportCSV()">CSV保存</button>
+  <button onclick="shareData()">共有</button>
+  <button onclick="clearAll()">全消去</button>
+</div>
+
+<div class="note">
+記録はこの端末のブラウザ内に保存されます。<br>
+病院から指定された記録方法がある場合は、そちらを優先してください。
+</div>
+</main>
+
+<script>
+const KEY="holterMemo2026";
+let records=JSON.parse(localStorage.getItem(KEY)||"[]");
+
+function pad(n){return String(n).padStart(2,"0")}
+function now(){
+  const d=new Date();
+  return {
+    d,
+    time:`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`,
+    date:`${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())}`
+  };
+}
+function updateClock(){
+  const n=now();
+  document.getElementById("clock").textContent=n.time;
+  document.getElementById("date").textContent=n.date;
+}
+setInterval(updateClock,250);
+updateClock();
+
+function save(){localStorage.setItem(KEY,JSON.stringify(records));render()}
+function addMemo(text=null){
+  const input=document.getElementById("memo");
+  const value=(text===null?input.value:text).trim();
+  if(!value){input.focus();return}
+  const n=now();
+  records.unshift({
+    id:Date.now()+Math.random(),
+    iso:n.d.toISOString(),
+    date:n.date,
+    time:n.time,
+    text:value
+  });
+  input.value="";
+  save();
+}
+function quick(text){
+  if(text==="その他" || text==="その他の症状"){
+    document.getElementById("memo").value=text+"：";
+    document.getElementById("memo").focus();
+    return;
+  }
+  addMemo(text);
+}
+function render(){
+  const el=document.getElementById("log");
+  document.getElementById("count").textContent=`（${records.length}件）`;
+  if(!records.length){el.innerHTML='<div class="empty">まだ記録はありません</div>';return}
+  el.innerHTML=records.map(r=>`
+    <div class="item">
+      <div class="item-time">${esc(r.time)}</div>
+      <div class="item-text">${esc(r.text)}</div>
+      <button class="del" onclick="removeRecord('${r.id}')">削除</button>
+    </div>`).join("");
+}
+function removeRecord(id){
+  records=records.filter(r=>String(r.id)!==String(id));
+  save();
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function csvEscape(s){return '"'+String(s).replace(/"/g,'""')+'"'}
+function exportCSV(){
+  if(!records.length){alert("記録がありません。");return}
+  const rows=[["日付","時刻","内容"],...records.slice().reverse().map(r=>[r.date,r.time,r.text])];
+  const csv="\uFEFF"+rows.map(r=>r.map(csvEscape).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="心電図メモ_"+new Date().toISOString().slice(0,10)+".csv";a.click();
+  URL.revokeObjectURL(url);
+}
+async function shareData(){
+  if(!records.length){alert("記録がありません。");return}
+  const text=records.slice().reverse().map(r=>`${r.date} ${r.time}　${r.text}`).join("\n");
+  if(navigator.share){
+    try{await navigator.share({title:"心電図メモ",text});}catch(e){}
+  }else{
+    await navigator.clipboard.writeText(text);
+    alert("記録をクリップボードにコピーしました。");
+  }
+}
+function clearAll(){
+  if(!records.length)return;
+  if(confirm("記録をすべて消去します。よろしいですか？")){
+    records=[];save();
+  }
+}
+document.getElementById("memo").addEventListener("keydown",e=>{
+  if(e.key==="Enter")addMemo();
+});
+render();
+</script>
+</body>
+</html>
