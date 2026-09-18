@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>福祉カフェテリア｜リニューアルイメージ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --green:#3f806b;
+  --green-dark:#285b4c;
+  --green-light:#edf6f1;
+  --cream:#fbfaf5;
+  --orange:#d98955;
+  --text:#263530;
+  --muted:#66736e;
+  --line:#dfe8e3;
+  --white:#fff;
+  --shadow:0 12px 35px rgba(35,65,54,.10);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--text);
+  background:var(--cream);
+  font-family:"Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  line-height:1.8;
+}
+a{color:inherit;text-decoration:none}
+.container{width:min(1120px,92%);margin:auto}
+header{
+  position:sticky;top:0;z-index:20;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(10px);
+}
+.nav{
+  height:72px;display:flex;align-items:center;justify-content:space-between;gap:25px;
+}
+.logo{display:flex;align-items:center;gap:11px;font-weight:800;color:var(--green-dark)}
+.logo-mark{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--green);color:white;display:grid;place-items:center;
+  font-size:18px;
+}
+.nav-links{display:flex;gap:25px;font-size:14px;font-weight:600}
+.nav-links a:hover{color:var(--green)}
+.nav-btn{
+  padding:9px 17px;border-radius:999px;background:var(--green);color:white;
+}
+.hero{
+  min-height:590px;display:flex;align-items:center;
+  background:
+    radial-gradient(circle at 80% 25%,#dceee5 0 14%,transparent 14.5%),
+    radial-gradient(circle at 86% 68%,#f5dfcf 0 10%,transparent 10.5%),
+    linear-gradient(135deg,#f6fbf8,#f9f4e9);
+}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center}
+.eyebrow{color:var(--green);font-weight:800;letter-spacing:.08em;font-size:14px}
+h1{font-size:clamp(34px,5vw,58px);line-height:1.25;margin:12px 0 22px;letter-spacing:-.03em}
+.hero p{font-size:18px;color:var(--muted);margin:0 0 28px}
+.actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn{
+  display:inline-block;padding:13px 23px;border-radius:10px;font-weight:700;
+  border:1px solid var(--green);transition:.2s;
+}
+.btn-primary{background:var(--green);color:#fff}
+.btn-secondary{background:#fff;color:var(--green)}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.hero-card{
+  min-height:390px;border-radius:28px;box-shadow:var(--shadow);
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.25),rgba(255,255,255,.75)),
+    repeating-linear-gradient(45deg,#d5e8df 0 18px,#c9e0d6 18px 36px);
+  position:relative;overflow:hidden;
+}
+.hero-card:before{
+  content:"";position:absolute;width:250px;height:250px;border-radius:50%;
+  background:rgba(255,255,255,.7);top:55px;right:50px;
+}
+.hero-card-content{position:absolute;left:35px;bottom:30px;right:35px;background:rgba(255,255,255,.92);padding:22px;border-radius:18px}
+.hero-card-content strong{font-size:20px;color:var(--green-dark)}
+section{padding:82px 0}
+.section-head{max-width:700px;margin-bottom:38px}
+.section-head .eyebrow{margin-bottom:5px}
+h2{font-size:34px;line-height:1.35;margin:0 0 12px}
+.lead{color:var(--muted);margin:0}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{
+  background:white;border:1px solid var(--line);border-radius:18px;padding:28px;
+  box-shadow:0 5px 18px rgba(35,65,54,.04);
+}
+.icon{
+  width:50px;height:50px;border-radius:14px;background:var(--green-light);
+  color:var(--green-dark);display:grid;place-items:center;font-size:24px;margin-bottom:18px;
+}
+.card h3{margin:0 0 8px;font-size:19px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.flow{background:var(--green-light)}
+.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.step{background:#fff;border-radius:16px;padding:22px;position:relative}
+.step-num{color:var(--orange);font-weight:800;font-size:13px}
+.step strong{display:block;margin:4px 0 6px}
+.step p{font-size:13px;color:var(--muted);margin:0}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:25px}
+.info-box{background:white;border:1px solid var(--line);border-radius:18px;padding:30px}
+.info-box h3{margin-top:0}
+.info-box ul{margin:0;padding-left:20px}
+.news{display:grid;gap:10px}
+.news-item{background:white;border:1px solid var(--line);border-radius:12px;padding:15px 18px;display:flex;gap:20px}
+.date{color:var(--green);font-weight:700;white-space:nowrap}
+.cta{
+  background:var(--green-dark);color:#fff;border-radius:28px;padding:50px;
+  display:flex;justify-content:space-between;align-items:center;gap:30px;
+}
+.cta p{color:#d9e8e2;margin:5px 0 0}
+.cta .btn{border-color:#fff;background:#fff;color:var(--green-dark)}
+footer{padding:35px 0;background:#203e35;color:#dce9e4}
+.footer-grid{display:flex;justify-content:space-between;gap:20px}
+footer small{color:#aac2b9}
+.note{
+  position:fixed;right:18px;bottom:18px;z-index:30;
+  background:#fff;border:1px solid var(--line);border-radius:12px;
+  padding:10px 14px;font-size:12px;color:var(--muted);box-shadow:var(--shadow);
+}
+@media(max-width:800px){
+  .nav-links{display:none}
+  .hero-grid,.info-grid{grid-template-columns:1fr}
+  .hero{padding:70px 0}
+  .cards{grid-template-columns:1fr}
+  .flow-grid{grid-template-columns:1fr 1fr}
+  .cta{display:block;padding:35px}
+  .cta .btn{margin-top:20px}
+}
+@media(max-width:500px){
+  h2{font-size:28px}
+  section{padding:60px 0}
+  .flow-grid{grid-template-columns:1fr}
+  .hero-card{min-height:300px}
+  .news-item{display:block}
+  .date{display:block;margin-bottom:4px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <a href="#top" class="logo">
+      <span class="logo-mark">福</span>
+      <span>福祉カフェテリア</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#about">私たちについて</a>
+      <a href="#service">サービス</a>
+      <a href="#flow">ご利用について</a>
+      <a href="#news">お知らせ</a>
+      <a href="#access" class="nav-btn">アクセス</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <div class="eyebrow">地域に根ざしたリハビリ中心のデイサービス</div>
+      <h1>住み慣れた地域で、<br>いつまでも自分らしく。</h1>
+      <p>
+        福祉カフェテリアは、高齢者の皆さまが住み慣れたご自宅で
+        できるだけ長く暮らしていただけるよう、リハビリを中心とした
+        デイサービスを行っています。
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#service">サービスを見る</a>
+        <a class="btn btn-secondary" href="#access">アクセスを見る</a>
+      </div>
+    </div>
+    <div class="hero-card" aria-label="施設イメージ">
+      <div class="hero-card-content">
+        <strong>福祉カフェ・リハビリサロン</strong>
+        <div>地域の皆さまの「できる」を支える場所</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">ABOUT US</div>
+      <h2>福祉カフェテリアについて</h2>
+      <p class="lead">地域の高齢者の方々が、安心して自分らしい生活を続けられるように。</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <div class="icon">🏠</div>
+        <h3>地域で暮らし続ける</h3>
+        <p>住み慣れた自宅・地域での生活を大切にし、その継続を支えます。</p>
+      </article>
+      <article class="card">
+        <div class="icon">♿</div>
+        <h3>リハビリを中心に</h3>
+        <p>日々の生活につながる身体機能の維持・向上を目指します。</p>
+      </article>
+      <article class="card">
+        <div class="icon">🤝</div>
+        <h3>人とのつながり</h3>
+        <p>スタッフや地域とのつながりを大切にし、安心できる時間を提供します。</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="service" class="flow">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">SERVICE</div>
+      <h2>デイサービス</h2>
+      <p class="lead">「運動する」「交流する」「楽しく過ごす」を通して、毎日の生活を支えます。</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <div class="icon">💪</div>
+        <h3>リハビリ・運動</h3>
+        <p>利用者さまの状態に合わせて、身体を動かす時間を大切にします。</p>
+      </article>
+      <article class="card">
+        <div class="icon">🧠</div>
+        <h3>脳トレ・活動</h3>
+        <p>楽しみながら取り組める活動を通して、日々の刺激につなげます。</p>
+      </article>
+      <article class="card">
+        <div class="icon">☕</div>
+        <h3>交流の時間</h3>
+        <p>人と話したり、一緒に過ごしたりすることも大切なサービスの一つです。</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">FIRST VISIT</div>
+      <h2>初めての方へ</h2>
+      <p class="lead">「どんなところだろう？」という方にも、分かりやすい情報をまとめています。</p>
+    </div>
+    <div class="flow-grid">
+      <div class="step"><span class="step-num">STEP 01</span><strong>お問い合わせ</strong><p>まずはお気軽にご相談ください。</p></div>
+      <div class="step"><span class="step-num">STEP 02</span><strong>見学・ご相談</strong><p>施設の雰囲気やサービスをご案内します。</p></div>
+      <div class="step"><span class="step-num">STEP 03</span><strong>ご利用について確認</strong><p>ご本人・ご家族の希望を伺います。</p></div>
+      <div class="step"><span class="step-num">STEP 04</span><strong>ご利用開始</strong><p>安心して通えるようスタッフがサポートします。</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="news">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">NEWS</div>
+      <h2>お知らせ</h2>
+      <p class="lead">施設からのお知らせを、スマートフォンでも見つけやすく。</p>
+    </div>
+    <div class="news">
+      <div class="news-item"><span class="date">2026.09.18</span><span>ホームページをリニューアルしました。</span></div>
+      <div class="news-item"><span class="date">2026.09.01</span><span>施設からのお知らせを掲載しています。</span></div>
+      <div class="news-item"><span class="date">2026.08.01</span><span>ご利用・見学についてのお問い合わせを受け付けています。</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="access">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">ACCESS</div>
+      <h2>アクセス・お問い合わせ</h2>
+      <p class="lead">初めての方にも場所や連絡先がすぐ分かるようにしています。</p>
+    </div>
+    <div class="info-grid">
+      <div class="info-box">
+        <h3>福祉カフェ・リハビリサロン</h3>
+        <p>東京都日野市日野本町2丁目10-27<br>※住所・電話番号等は公開情報に合わせて最終調整してください。</p>
+        <a class="btn btn-primary" href="https://www.fukushi-cafe.com/%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9/" target="_blank" rel="noopener">公式サイトのアクセス情報</a>
+      </div>
+      <div class="info-box">
+        <h3>お問い合わせ</h3>
+        <p>サービス内容、見学、ご利用についてなど、お気軽にご相談ください。</p>
+        <ul>
+          <li>電話でのお問い合わせ</li>
+          <li>見学・利用相談</li>
+          <li>スタッフ募集</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="cta">
+      <div>
+        <h2 style="margin:0;color:white">地域の毎日を、もっと身近に。</h2>
+        <p>福祉カフェテリアは地域の皆さまの暮らしを支えます。</p>
+      </div>
+      <a class="btn" href="https://www.fukushi-cafe.com/" target="_blank" rel="noopener">現在の公式サイトを見る</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="container footer-grid">
+    <div><strong>特定非営利活動法人 福祉カフェテリア</strong><br><small>地域に根ざした福祉サービス</small></div>
+    <small>© NPO法人福祉カフェテリア</small>
+  </div>
+</footer>
+
+<div class="note">面接用・ホームページ改善イメージ</div>
+</body>
+</html>
