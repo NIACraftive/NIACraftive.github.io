@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>データベース管理</title>
+<style>
+:root {
+  --bg: #f2f4f7;
+  --surface: #ffffff;
+  --border: #d7dce3;
+  --text: #1d2530;
+  --sub: #5c6773;
+  --accent: #2f6f4f;
+  --accent-ink: #ffffff;
+  --danger: #b5453b;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181f; --surface: #1c222c; --border: #2d3542;
+    --text: #e7ebf1; --sub: #93a0b0; --accent: #4c9d74;
+    --accent-ink: #0d130f; --danger: #e0776c;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14181f; --surface: #1c222c; --border: #2d3542;
+  --text: #e7ebf1; --sub: #93a0b0; --accent: #4c9d74;
+  --accent-ink: #0d130f; --danger: #e0776c;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  min-height: 100%;
+}
+.wrap { max-width: 640px; margin: 0 auto; padding: 16px 16px 60px; }
+h1 { font-size: 19px; font-weight: 700; margin: 4px 0 14px; letter-spacing: .01em; }
+.tabs {
+  position: sticky; top: env(safe-area-inset-top, 0px);
+  display: flex; gap: 6px; background: var(--bg);
+  padding: 6px 0 12px; z-index: 5;
+}
+.tab-btn {
+  flex: 1; padding: 10px 6px; font-size: 13.5px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--surface); color: var(--sub);
+  border-radius: 8px; cursor: pointer;
+}
+.tab-btn.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px; margin-bottom: 16px;
+}
+label { display: block; font-size: 12.5px; color: var(--sub); margin: 10px 0 4px; }
+label:first-child { margin-top: 0; }
+input, select {
+  width: 100%; padding: 10px 12px; font-size: 15px;
+  border: 1px solid var(--border); border-radius: 7px;
+  background: var(--bg); color: var(--text); outline: none;
+}
+input:focus, select:focus { border-color: var(--accent); }
+button {
+  border: none; border-radius: 7px; padding: 11px 16px;
+  font-size: 14.5px; font-weight: 600; cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); width: 100%; margin-top: 14px; }
+.btn-ghost { background: transparent; color: var(--sub); border: 1px solid var(--border); }
+.btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--border); }
+.row { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.sortrow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.entry {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;
+}
+.entry-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.entry-client { font-weight: 700; font-size: 15px; }
+.entry-price { font-weight: 700; color: var(--accent); font-size: 15px; white-space: nowrap; }
+.entry-sub { font-size: 13px; color: var(--sub); margin-top: 4px; line-height: 1.6; }
+.entry-actions { margin-top: 10px; display: flex; gap: 8px; }
+.entry-actions button { padding: 6px 12px; font-size: 12.5px; }
+.empty { text-align: center; color: var(--sub); padding: 30px 10px; font-size: 14px; }
+.section-title { font-size: 13px; color: var(--sub); margin: 4px 0 8px 2px; }
+.err { color: var(--danger); font-size: 13px; margin-top: 8px; }
+.count { font-size: 12.5px; color: var(--sub); }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>データベース管理</h1>
+
+<div class="tabs">
+  <button class="tab-btn active" id="tabBtn-register" onclick="switchTab('register')">登録</button>
+  <button class="tab-btn" id="tabBtn-list" onclick="switchTab('list')">一覧</button>
+  <button class="tab-btn" id="tabBtn-search" onclick="switchTab('search')">検索</button>
+</div>
+
+<div id="tab-register">
+  <div class="card">
+    <label>パスワード</label>
+    <input id="f_pass" placeholder="例：A001">
+    <label>得意先</label>
+    <input id="f_client" placeholder="例：〇〇商店">
+    <label>学校名</label>
+    <input id="f_school" placeholder="例：〇〇小学校">
+    <label>明細</label>
+    <input id="f_detail" placeholder="例：体操服 上下セット">
+    <label>品番</label>
+    <input id="f_partno" placeholder="例：ABC-123">
+    <label>価格</label>
+    <input id="f_price" type="number" inputmode="decimal" placeholder="例：3500">
+    <button class="btn-primary" onclick="addEntry()">登録する</button>
+    <div class="err" id="addErr"></div>
+  </div>
+</div>
+
+<div id="tab-list" class="hidden">
+  <div class="card">
+    <div class="sortrow">
+      <div>
+        <label>並び替え項目</label>
+        <select id="sortField" onchange="renderListTab()">
+          <option value="client">得意先</option>
+          <option value="school">学校名</option>
+          <option value="detail">明細</option>
+          <option value="partno">品番</option>
+          <option value="price">価格</option>
+          <option value="pass">パスワード</option>
+        </select>
+      </div>
+      <button class="btn-ghost" id="sortDirBtn" onclick="toggleSortDir()">昇順↑</button>
+    </div>
+    <div class="row" style="margin-top:14px;margin-bottom:0">
+      <span class="count" id="listCount"></span>
+    </div>
+  </div>
+  <div id="listAll"></div>
+</div>
+
+<div id="tab-search" class="hidden">
+  <div class="card">
+    <label>パスワード</label>
+    <input id="s_pass" oninput="renderSearchTab()">
+    <div class="grid2">
+      <div><label>得意先</label><input id="s_client" oninput="renderSearchTab()"></div>
+      <div><label>学校名</label><input id="s_school" oninput="renderSearchTab()"></div>
+      <div><label>明細</label><input id="s_detail" oninput="renderSearchTab()"></div>
+      <div><label>品番</label><input id="s_partno" oninput="renderSearchTab()"></div>
+    </div>
+    <label>価格</label>
+    <input id="s_price" oninput="renderSearchTab()">
+    <div class="row" style="margin-top:14px;margin-bottom:0">
+      <span class="count" id="searchCount"></span>
+      <button class="btn-ghost" onclick="clearSearch()">検索条件をクリア</button>
+    </div>
+  </div>
+  <div id="listSearch"></div>
+</div>
+
+</div>
+
+<script>
+const DATA_KEY = 'dbapp_records_v1';
+let sortDir = 'asc';
+
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(DATA_KEY)) || []; }
+  catch(e) { return []; }
+}
+function saveRecords(recs) {
+  try { localStorage.setItem(DATA_KEY, JSON.stringify(recs)); }
+  catch(e) {}
+}
+
+function switchTab(name) {
+  ['register','list','search'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
+    document.getElementById('tabBtn-' + t).classList.toggle('active', t === name);
+  });
+  if (name === 'list') renderListTab();
+  if (name === 'search') renderSearchTab();
+}
+
+function addEntry() {
+  const pass = document.getElementById('f_pass').value.trim();
+  const client = document.getElementById('f_client').value.trim();
+  const school = document.getElementById('f_school').value.trim();
+  const detail = document.getElementById('f_detail').value.trim();
+  const partno = document.getElementById('f_partno').value.trim();
+  const price = document.getElementById('f_price').value.trim();
+  const err = document.getElementById('addErr');
+  if (!pass && !client && !school && !detail && !partno && !price) {
+    err.textContent = '少なくとも1項目は入力してください。';
+    return;
+  }
+  err.textContent = '';
+  const recs = loadRecords();
+  recs.unshift({
+    id: Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    pass, client, school, detail, partno, price
+  });
+  saveRecords(recs);
+  ['f_pass','f_client','f_school','f_detail','f_partno','f_price'].forEach(id => document.getElementById(id).value = '');
+  err.textContent = '登録しました。';
+  setTimeout(() => { if (err.textContent === '登録しました。') err.textContent = ''; }, 1800);
+}
+
+function deleteEntry(id) {
+  const recs = loadRecords().filter(r => r.id !== id);
+  saveRecords(recs);
+  renderListTab();
+  renderSearchTab();
+}
+
+function clearSearch() {
+  ['s_pass','s_client','s_school','s_detail','s_partno','s_price'].forEach(id => document.getElementById(id).value = '');
+  renderSearchTab();
+}
+
+function esc(s) {
+  return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function entryHtml(r) {
+  return `
+    <div class="entry">
+      <div class="entry-top">
+        <div class="entry-client">${esc(r.client) || '（得意先未入力）'}</div>
+        <div class="entry-price">${r.price ? '¥' + esc(String(r.price)) : ''}</div>
+      </div>
+      <div class="entry-sub">
+        パスワード：${esc(r.pass) || '—'}<br>
+        学校名：${esc(r.school) || '—'}<br>
+        明細：${esc(r.detail) || '—'}<br>
+        品番：${esc(r.partno) || '—'}
+      </div>
+      <div class="entry-actions">
+        <button class="btn-danger" onclick="deleteEntry('${r.id}')">削除</button>
+      </div>
+    </div>
+  `;
+}
+
+function toggleSortDir() {
+  sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  document.getElementById('sortDirBtn').textContent = sortDir === 'asc' ? '昇順↑' : '降順↓';
+  renderListTab();
+}
+
+function renderListTab() {
+  const recs = loadRecords();
+  const field = document.getElementById('sortField').value;
+  const sorted = [...recs].sort((a, b) => {
+    let av = a[field] || '', bv = b[field] || '';
+    if (field === 'price') { av = Number(av) || 0; bv = Number(bv) || 0; }
+    else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  document.getElementById('listCount').textContent = `全 ${recs.length} 件`;
+  const el = document.getElementById('listAll');
+  el.innerHTML = sorted.length === 0
+    ? '<div class="empty">まだデータが登録されていません。</div>'
+    : sorted.map(entryHtml).join('');
+}
+
+function renderSearchTab() {
+  const recs = loadRecords();
+  const spw = document.getElementById('s_pass').value.trim().toLowerCase();
+  const sc = document.getElementById('s_client').value.trim().toLowerCase();
+  const ss = document.getElementById('s_school').value.trim().toLowerCase();
+  const sd = document.getElementById('s_detail').value.trim().toLowerCase();
+  const sp = document.getElementById('s_partno').value.trim().toLowerCase();
+  const spr = document.getElementById('s_price').value.trim().toLowerCase();
+  const anyFilter = spw || sc || ss || sd || sp || spr;
+
+  const filtered = recs.filter(r =>
+    (!spw || (r.pass||'').toLowerCase().includes(spw)) &&
+    (!sc || (r.client||'').toLowerCase().includes(sc)) &&
+    (!ss || (r.school||'').toLowerCase().includes(ss)) &&
+    (!sd || (r.detail||'').toLowerCase().includes(sd)) &&
+    (!sp || (r.partno||'').toLowerCase().includes(sp)) &&
+    (!spr || String(r.price||'').toLowerCase().includes(spr))
+  );
+
+  const el = document.getElementById('listSearch');
+  document.getElementById('searchCount').textContent = anyFilter ? `${filtered.length} 件 / 全 ${recs.length} 件` : '';
+  if (!anyFilter) {
+    el.innerHTML = '<div class="empty">検索条件を入力してください。</div>';
+    return;
+  }
+  el.innerHTML = filtered.length === 0
+    ? '<div class="empty">条件に一致するデータがありません。</div>'
+    : filtered.map(entryHtml).join('');
+}
+
+renderListTab();
+</script>
+</body>
+</html>
