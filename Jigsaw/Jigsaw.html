@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ジグソーパズル</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#e9e4da;--fg:#222;--bar:rgba(255,255,255,.85)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#22252b;--fg:#eee;--bar:rgba(0,0,0,.6)}}
+:root[data-theme="dark"]{--bg:#22252b;--fg:#eee;--bar:rgba(0,0,0,.6)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,"Hiragino Sans","Yu Gothic",sans-serif;overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#bar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 12px);display:flex;flex-wrap:wrap;justify-content:center;gap:6px;align-items:center;background:var(--bar);padding:6px 8px;border-radius:10px;font-size:14px}
+#bar button,#bar select{font:inherit;padding:4px 10px;border-radius:6px;border:1px solid #8886;background:transparent;color:inherit}
+#bar button{box-sizing:border-box;white-space:nowrap;text-align:center}
+#bar button{width:8.2em}
+#bar #fit,#bar #zi,#bar #zo{width:4em}
+#bar button:disabled{opacity:.45}
+#st{display:inline-block;width:4em;text-align:center;font-variant-numeric:tabular-nums}
+#win{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:14px;align-items:center;background:var(--bar);padding:8px 16px;border-radius:12px;font-size:18px;white-space:nowrap}
+#win[hidden]{display:none}
+#win button{font:inherit;font-size:15px;padding:6px 16px;border-radius:8px;border:1px solid #8886;background:transparent;color:inherit}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="bar">
+
+<button id="pick">画像を選ぶ</button><button id="gd">ガイド：残3</button><button id="bgb">背景:ベージュ</button><button id="fit">全体</button><button id="zi">＋</button><button id="zo">－</button>
+<span id="st"></span></div>
+<input type="file" id="f" accept="image/*" hidden>
+<div id="win" hidden><div>🎉 完成！</div><div id="wt"></div><button id="again">もう一度</button></div>
+<script>
+const $=id=>document.getElementById(id),cv=$('c'),ctx=cv.getContext('2d'),hctx=document.createElement('canvas').getContext('2d');
+const TAU=Math.PI*2,Q=1.5;let PW=832,PH=1216,reg={x:0,y:0,w:1,h:1}; // 画像の縦横比に合わせて盤面サイズ(長辺1216)を決める
+let guideLeft=3,guideUntil=0,assembled=false,ptr,rotT,tapState={},orig,G=[],seam=true,complete=false,fade=0,ct=0,cam0,cam1,W,H,dpr,cam={x:0,y:0,z:1},base,cols=6,rows=9,P=[],cw,ch,T,guide=false,t0=0,done=false,held=null,drag=null;
+
+const LEVELS=[24,54,96,150];let level=0; // ピース数の4段階設定(将来は画像ごとに level を切り替える)。メニューには出さない
+const BGS=[ // c=外側(背景) / fill=盤面の下地 / sk=盤面の枠線
+ {n:'白',c:'#ffffff',fill:'rgba(0,0,0,.12)',sk:'rgba(0,0,0,.4)'},
+ {n:'ベージュ',c:'#e9e4da',fill:'rgba(0,0,0,.12)',sk:'rgba(0,0,0,.4)'},
+ {n:'グレー',c:'#4a4d52',fill:'rgba(255,255,255,.3)',sk:'rgba(255,255,255,.4)'},
+ {n:'黒',c:'#111214',fill:'rgba(255,255,255,.36)',sk:'rgba(255,255,255,.5)'},
+ {n:'薄い青',c:'#a9c8ea',fill:'rgba(255,255,255,.72)',sk:'rgba(30,70,130,.55)'},
+ {n:'薄い赤',c:'#eba5a5',fill:'rgba(255,255,255,.72)',sk:'rgba(140,40,40,.55)'}];
+let bgi=1,BG=BGS[1]; // 背景色(押すたびに 白→ベージュ→グレー→黒)
+function resize(){dpr=devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;draw()}
+function demo(){const c=document.createElement('canvas');c.width=1664;c.height=2432;const g=c.getContext('2d');
+ const gr=g.createLinearGradient(0,0,0,2432);gr.addColorStop(0,'#1d2b64');gr.addColorStop(.5,'#f8cdda');gr.addColorStop(1,'#ffb347');
+ g.fillStyle=gr;g.fillRect(0,0,1664,2432);
+ for(let i=0;i<260;i++){g.fillStyle=`hsla(${Math.random()*360},80%,60%,.35)`;g.beginPath();g.arc(Math.random()*1664,Math.random()*2432,20+Math.random()*140,0,7);g.fill()}
+ g.fillStyle='#fff';g.font='bold 260px sans-serif';g.textAlign='center';g.fillText('JIGSAW',832,1250);return c}
+function setImage(im){ // 切り抜かず、画像の縦横比のまま盤面にする
+ const iw=im.naturalWidth||im.width,ih=im.naturalHeight||im.height;
+ if(ih>=iw){PH=1216;PW=Math.max(200,Math.round(1216*iw/ih))}else{PW=1216;PH=Math.max(200,Math.round(1216*ih/iw))}
+ base=document.createElement('canvas');base.width=PW*Q;base.height=PH*Q;
+ orig=im;const bg=base.getContext('2d');bg.imageSmoothingEnabled=true;bg.imageSmoothingQuality='high';
+ bg.drawImage(im,0,0,iw,ih,0,0,base.width,base.height)}
+
+function edge(p,x0,y0,x1,y1,s){
+ if(!s){p.lineTo(x1,y1);return}
+ const dx=x1-x0,dy=y1-y0,nx=dy*s,ny=-dx*s,q=(a,b)=>[x0+dx*a+nx*b,y0+dy*a+ny*b];
+ const L=(a,b)=>p.lineTo(...q(a,b)),B=(a,b,c,d,e,f)=>p.bezierCurveTo(...q(a,b),...q(c,d),...q(e,f));
+ L(.35,0);B(.42,.02,.44,.06,.42,.12);B(.36,.2,.4,.28,.5,.28);B(.6,.28,.64,.2,.58,.12);B(.56,.06,.58,.02,.65,0);p.lineTo(x1,y1)}
+
+function build(){
+ cw=PW/cols;ch=PH/rows;T=Math.ceil(Math.max(cw,ch)*.3)+8;
+ const h=[],v=[],rnd=()=>Math.random()<.5?1:-1;
+ for(let r=0;r<=rows;r++){h[r]=[];for(let c=0;c<cols;c++)h[r][c]=(r==0||r==rows)?0:rnd()}
+ for(let r=0;r<rows;r++){v[r]=[];for(let c=0;c<=cols;c++)v[r][c]=(c==0||c==cols)?0:rnd()}
+ P=[];G=[];
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+  const x0=T,y0=T,x1=T+cw,y1=T+ch,p=new Path2D();
+  p.moveTo(x0,y0);edge(p,x0,y0,x1,y0,-h[r][c]);edge(p,x1,y0,x1,y1,v[r][c+1]);edge(p,x1,y1,x0,y1,h[r+1][c]);edge(p,x0,y1,x0,y0,-v[r][c]);p.closePath();
+  const sd=[0,1,2,3].map(()=>new Path2D());
+  sd[0].moveTo(x0,y0);edge(sd[0],x0,y0,x1,y0,-h[r][c]);sd[1].moveTo(x1,y0);edge(sd[1],x1,y0,x1,y1,v[r][c+1]);
+  sd[2].moveTo(x1,y1);edge(sd[2],x1,y1,x0,y1,h[r+1][c]);sd[3].moveTo(x0,y1);edge(sd[3],x0,y1,x0,y0,-v[r][c]);
+  const oc=document.createElement('canvas');oc.width=(cw+2*T)*Q;oc.height=(ch+2*T)*Q;
+  const o=oc.getContext('2d');o.scale(Q,Q);o.save();o.clip(p);
+  o.drawImage(base,(c*cw-T)*Q,(r*ch-T)*Q,(cw+2*T)*Q,(ch+2*T)*Q,0,0,cw+2*T,ch+2*T);o.restore();
+  
+  const pc={r,c,x:0,y:0,a:0,lock:false,oc,path:p,sides:sd,ovs:{}};pc.g=[pc];P.push(pc);G[r*cols+c]=pc}}
+
+function scatter(){ // 横画面基準: 盤面の左右の帯にだけ散らす。どのピースも70%以上見えるよう、重なりを計算して配置
+ const R=Math.sqrt(cw*ch/Math.PI)*1.05,SP=[]; // ピースを同面積の円で近似
+ for(let k=0;k<28;k++){const r=Math.sqrt((k+.5)/28),a=k*2.39996;SP.push([r*Math.cos(a),r*Math.sin(a)])}
+ const fits=(arr,x,y)=>{const near=arr.filter(q=>(q.x-x)**2+(q.y-y)**2<16*R*R);near.push({x,y}); // 末尾=最前面
+  for(let i=0;i<near.length-1;i++){const q=near[i];if((q.x-x)**2+(q.y-y)**2>=4*R*R)continue;
+   let vis=0;for(const[sx,sy]of SP){const px=q.x+sx*R,py=q.y+sy*R;let cov=false;
+    for(let j=i+1;j<near.length;j++){const o=near[j];if((o.x-px)**2+(o.y-py)**2<R*R){cov=true;break}}
+    if(!cov)vis++}
+   if(vis<.76*SP.length)return false}
+  return true};
+ const order=P.slice().sort(()=>Math.random()-.5);let bw=0,ok=false;
+ for(let att=0;att<15&&!ok;att++){ // 入らなければ帯を少しずつ広げる
+  bw=Math.max(PW*.7,R*3)*(1+.12*att);const arr=[];ok=true;
+  for(let i=0;i<order.length&&ok;i++){const left=i%2==0;let put=false;
+   for(let t=0;t<250&&!put;t++){const d=R+Math.random()*(bw-R),x=left?-d:PW+d,y=-PH*.06+Math.random()*PH*1.12;
+    if(fits(arr,x,y)){arr.push({x,y});put=true}}
+   if(!put)ok=false}
+  if(ok)order.forEach((p,i)=>{p.x=arr[i].x;p.y=arr[i].y})}
+ if(!ok)order.forEach((p,i)=>{const d=R+Math.random()*(bw-R);p.x=i%2?PW+d:-d;p.y=-PH*.06+Math.random()*PH*1.12});
+ order.forEach(p=>{p.a=Math.random()*TAU;p.lock=false;p.g=[p]});P=order;
+ const m=R*.6;reg={x:-bw-m,y:-PH*.06-m,w:PW+2*(bw+m),h:PH*1.12+2*m}}
+function fit(){cam.z=Math.min(W/(reg.w+2*T),(H-60)/(reg.h+2*T));cam.x=reg.x+reg.w/2;cam.y=reg.y+reg.h/2-30/cam.z;draw()}
+
+const NB=[[-1,0],[0,1],[1,0],[0,-1]];
+function mask(p){if(complete)return 0;let m=0;for(let i=0;i<4;i++){const r=p.r+NB[i][0],c=p.c+NB[i][1],n=(r>=0&&r<rows&&c>=0&&c<cols)?G[r*cols+c]:null;
+ if(seam||!n||!(n.g===p.g||(n.lock&&p.lock)))m|=1<<i}return m}
+function ov(p,m){if(p.ovs[m])return p.ovs[m];
+ const c=document.createElement('canvas');c.width=p.oc.width;c.height=p.oc.height;const o=c.getContext('2d');
+ const seg=new Path2D();for(let i=0;i<4;i++)if(m>>i&1)seg.addPath(p.sides[i]);
+ o.scale(Q,Q);
+ o.save();o.shadowColor='rgba(0,0,0,.5)';o.shadowBlur=4*Q;o.shadowOffsetX=1.5*Q;o.shadowOffsetY=2*Q;o.lineWidth=2;o.strokeStyle='#000';o.stroke(seg);o.restore(); // 外側の落ち影
+ o.globalCompositeOperation='destination-out';o.fill(p.path);o.lineWidth=2.4;o.stroke(seg);o.globalCompositeOperation='source-over';
+ o.save();o.clip(p.path);o.lineJoin='round';o.lineCap='round'; // 内側の立体(左上から光)
+ o.strokeStyle='rgba(0,0,0,.10)';o.lineWidth=6;o.stroke(seg);
+ o.save();o.translate(1.2,1.2);o.strokeStyle='rgba(255,255,255,.6)';o.lineWidth=1.6;o.stroke(seg);o.restore();
+ o.save();o.translate(-1.2,-1.2);o.strokeStyle='rgba(0,0,0,.42)';o.lineWidth=2;o.stroke(seg);o.restore();
+ o.strokeStyle='rgba(0,0,0,.3)';o.lineWidth=1;o.stroke(seg);o.restore();
+ return p.ovs[m]=c}
+function drawP(p){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);
+ if(held&&p.g===held.g){ctx.shadowColor='rgba(0,0,0,.5)';ctx.shadowBlur=14*dpr;ctx.shadowOffsetY=4*dpr}
+ const X=-(cw/2+T),Y=-(ch/2+T),w=p.oc.width/Q,h=p.oc.height/Q;ctx.drawImage(p.oc,X,Y,w,h);ctx.shadowColor='transparent';
+ const m=mask(p);if(m)ctx.drawImage(ov(p,m),X,Y,w,h);ctx.restore()}
+function draw(){
+ if(!W)return;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,cv.width,cv.height);
+ ctx.setTransform(dpr*cam.z,0,0,dpr*cam.z,dpr*(W/2-cam.x*cam.z),dpr*(H/2-cam.y*cam.z));
+ ctx.imageSmoothingQuality='high';
+ ctx.fillStyle=BG.fill;ctx.fillRect(0,0,PW,PH);
+ const gt=guideUntil-Date.now();if(gt>0&&base){ctx.globalAlpha=.22*Math.min(1,(3000-gt)/250,gt/400);ctx.drawImage(base,0,0,PW,PH);ctx.globalAlpha=1} // ガイドは3秒だけ薄く表示
+ ctx.strokeStyle=BG.sk;ctx.lineWidth=2/cam.z;if(!complete)ctx.strokeRect(0,0,PW,PH);
+ for(const p of P)drawP(p);
+ if(complete){ctx.globalAlpha=fade;ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=24*dpr;ctx.shadowOffsetY=6*dpr;ctx.drawImage(orig,0,0,PW,PH);ctx.globalAlpha=1;ctx.shadowColor='transparent'}}
+
+function hit(wx,wy){for(let i=P.length-1;i>=0;i--){const p=P[i];if(p.lock)continue;
+ const dx=wx-p.x,dy=wy-p.y,c=Math.cos(-p.a),s=Math.sin(-p.a);
+ if(hctx.isPointInPath(p.path,dx*c-dy*s+cw/2+T,dx*s+dy*c+ch/2+T))return p}return null}
+const nrm=a=>{a=((a%TAU)+TAU)%TAU;return a>Math.PI?a-TAU:a};
+function rot(g,px,py,da){const c=Math.cos(da),s=Math.sin(da);for(const q of g){const dx=q.x-px,dy=q.y-py;q.x=px+dx*c-dy*s;q.y=py+dx*s+dy*c;q.a+=da}}
+function mv(g,dx,dy){for(const q of g){q.x+=dx;q.y+=dy}}
+function lockG(g){for(const q of g){q.lock=true;P.splice(P.indexOf(q),1);P.unshift(q)}}
+// なめらか回転: 目標角度との差を指数的に詰める(連続スクロールは加算)
+let anims=[],aRun=false,aLast=0;
+function rotA(p,da){const a=anims.find(a=>a.p.g===p.g);if(a){a.rem+=da;a.p=p}else anims.push({p,rem:da,v:0});
+ if(!aRun){aRun=true;aLast=performance.now();requestAnimationFrame(tick)}}
+function pend(g){const a=anims.find(a=>a.p.g===g);return a?a.rem:0}
+function flush(g){for(let i=anims.length-1;i>=0;i--){const a=anims[i];if(a.p.g===g){rot(g,a.p.x,a.p.y,a.rem);anims.splice(i,1)}}}
+function tick(now){const dt=Math.max(0,Math.min(.05,(now-aLast)/1000));aLast=now;const fin=[];
+ for(const a of anims.slice()){if(a.p.lock){anims.splice(anims.indexOf(a),1);continue}
+  // 臨界減衰バネ: 速度0から滑らかに加速し、ゆっくり止まる
+  const w=14,e=Math.exp(-w*dt),A=a.rem,B=(a.v||0)+w*A,nx=(A+B*dt)*e,nv=(B-w*(A+B*dt))*e;let st=A-nx;a.rem=nx;a.v=nv;
+  if(Math.abs(nx)<.002&&Math.abs(nv)<.05){st=A;a.rem=0;a.v=0}
+  rot(a.p.g,a.p.x,a.p.y,st);
+  if(drag&&drag.p&&drag.p.g===a.p.g&&drag.mode==='move'&&!pts.size&&ptr){drag.ox=drag.p.x-ptr[0];drag.oy=drag.p.y-ptr[1]}
+  if(a.rem===0){anims.splice(anims.indexOf(a),1);fin.push(a.p)}}
+ for(const p of fin)if(!(held&&held.g===p.g))trySnap(p);
+ draw();if(anims.length)requestAnimationFrame(tick);else aRun=false}
+function trySnap(p){flush(p.g);
+ const tol=Math.min(cw,ch)*.3;
+ let again=true; // 隣のピース(の塊)との吸着、枠の内外を問わない
+ while(again){again=false;const g=p.g;
+  outer:for(const q of g)for(const[dr,dc]of[[0,1],[0,-1],[1,0],[-1,0]]){
+   const n=P.find(m=>m.r==q.r+dr&&m.c==q.c+dc);if(!n||n.g===g)continue;flush(n.g);
+   const ex=q.x+Math.cos(q.a)*dc*cw-Math.sin(q.a)*dr*ch,ey=q.y+Math.sin(q.a)*dc*cw+Math.cos(q.a)*dr*ch;
+   if(Math.hypot(n.x-ex,n.y-ey)>=tol||Math.abs(nrm(n.a-q.a))>=.26)continue;
+   const mvN=g.some(m=>m.lock)&&!n.g.some(m=>m.lock); // 固定側にくっつく
+   let mover,mp,ap,kc,kr;
+   if(mvN){mover=n.g;mp=n;ap=q;kc=-dc;kr=-dr}else{mover=g;mp=q;ap=n;kc=dc;kr=dr}
+   rot(mover,mp.x,mp.y,ap.a-mp.a);
+   const c=Math.cos(ap.a),s=Math.sin(ap.a);
+   mv(mover,ap.x-(c*kc*cw-s*kr*ch)-mp.x,ap.y-(s*kc*cw+c*kr*ch)-mp.y);
+   const ng=g.concat(n.g);for(const m of ng)m.g=ng;
+   if(ng.some(m=>m.lock))lockG(ng);
+   again=true;break outer}}
+ if(!p.lock&&(p.g.length>1||(p.r%(rows-1)==0&&p.c%(cols-1)==0)))for(const q of p.g){const tx=q.c*cw+cw/2,ty=q.r*ch+ch/2; // 枠への吸着(塊ごと)。どのピースともつながっていない1枚だけでは固定できない(四隅のピースは単独でOK)
+  if(Math.hypot(q.x-tx,q.y-ty)<tol&&Math.abs(nrm(q.a))<.26){rot(p.g,q.x,q.y,-nrm(q.a));mv(p.g,tx-q.x,ty-q.y);lockG(p.g);break}}
+ if(!done&&(P.every(q=>q.lock)||p.g.length==P.length)){
+  if(!p.lock){const tx=p.c*cw+cw/2,ty=p.r*ch+ch/2;rot(p.g,p.x,p.y,-nrm(p.a));mv(p.g,tx-p.x,ty-p.y);lockG(p.g)}
+  done=true;assembled=true;const tm='タイム '+fmt();$('wt').dataset.t=tm;$('wt').textContent=tm+'　クリックで1枚絵を表示';$('win').hidden=false} // 完成してもつなぎ目は残したまま保持
+ upd()}
+const fmt=()=>{const s=Math.floor((Date.now()-t0)/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function anim(){const t=Math.min(1,(Date.now()-ct)/900),e=t*t*(3-2*t);fade=e;for(const k of['x','y','z'])cam[k]=cam0[k]+(cam1[k]-cam0[k])*e;draw();if(t<1)requestAnimationFrame(anim)}
+function reveal(){if(complete)return; // クリックで完成演出: つなぎ目を消して1枚絵へ
+ complete=true;$('wt').textContent=$('wt').dataset.t||'';
+ ct=Date.now();cam0={...cam};cam1={x:PW/2,y:PH/2,z:Math.max(.1,Math.min(W/(PW+60),(H-130)/(PH+60)))};anim()}
+function guideUI(){$('gd').textContent='ガイド：残'+guideLeft;$('gd').disabled=guideLeft<=0}
+function upd(){if(!done)$('st').textContent=fmt()}
+setInterval(upd,500);
+
+const w2=e=>{const r=cv.getBoundingClientRect();return ptr=[(e.clientX-r.left-W/2)/cam.z+cam.x,(e.clientY-r.top-H/2)/cam.z+cam.y]};
+// 操作(PC): 左クリック=移動 / 右クリック=カーソルに合わせて回転(ピース中心が軸) / 左右同時(押す順は問わない)=移動
+// タッチ: 指1本=回転、指2本=移動
+const pts=new Map();
+const ptw=()=>{let sx=0,sy=0;for(const q of pts.values()){const[a,b]=w2(q);sx+=a;sy+=b}return[sx/pts.size,sy/pts.size]};
+const modeOf=e=>e.pointerType==='mouse'?((e.buttons&1)?'move':((e.buttons&2)?'rot':null)):(pts.size>=2?'move':'rot');
+const ctr=e=>e.pointerType==='mouse'?w2(e):ptw();
+function setMode(d,m,e){d.mode=m;const[x,y]=ctr(e),p=d.p;if(m==='move'){d.ox=p.x-x;d.oy=p.y-y}else d.last=Math.atan2(y-p.y,x-p.x)}
+cv.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0&&e.button!==2)return;
+ rotT=null;cv.setPointerCapture(e.pointerId);
+ if(e.pointerType!=='mouse')pts.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY});
+ if(drag&&!drag.pan){const m=modeOf(e);if(m&&m!==drag.mode)setMode(drag,m,e);return}
+ const[x,y]=w2(e),p=hit(x,y);
+ if(assembled&&!complete){reveal();return}
+ if(complete){if(fade>=1)drag={pan:1,sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};return}
+ if(p){flush(p.g);held=p;P=P.filter(q=>q.g!==p.g).concat(P.filter(q=>q.g===p.g));drag={p};setMode(drag,modeOf(e)||'rot',e)}
+ draw()});
+cv.addEventListener('pointermove',e=>{
+ if(e.pointerType!=='mouse'&&pts.has(e.pointerId))pts.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY});
+ if(!drag)return;
+ if(drag.pan){cam.x=drag.cx-(e.clientX-drag.sx)/cam.z;cam.y=drag.cy-(e.clientY-drag.sy)/cam.z;draw();return}
+ const m=modeOf(e);if(!m)return;if(m!==drag.mode)setMode(drag,m,e);
+ const[x,y]=ctr(e),p=drag.p;
+ if(m==='move')mv(p.g,x+drag.ox-p.x,y+drag.oy-p.y);
+ else if(Math.hypot(x-p.x,y-p.y)*cam.z>8){const ang=Math.atan2(y-p.y,x-p.x);rot(p.g,p.x,p.y,nrm(ang-drag.last));drag.last=ang}
+ draw()});
+function pup(e){pts.delete(e.pointerId);if(!drag)return;
+ if(e.pointerType!=='mouse'&&pts.size>0&&!drag.pan){const m=modeOf(e);if(m!==drag.mode)setMode(drag,m,e);return}
+ const p=drag.p;if(p)trySnap(p);held=null;drag=null;draw()}
+cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
+cv.addEventListener('dblclick',e=>{const[x,y]=w2(e),p=hit(x,y);if(!p)return; // ダブルクリック: 一番近い水平(90°単位)へ
+ const cur=p.a+pend(p.g),h=Math.PI/2;rotA(p,Math.round(cur/h)*h-cur)});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('wheel',e=>{e.preventDefault();
+ if(complete){if(fade>=1){const[a,b]=w2(e);cam.z=Math.min(4,Math.max(.1,cam.z*Math.exp(-e.deltaY*.001)));const[a2,b2]=w2(e);cam.x+=a-a2;cam.y+=b-b2;draw()}return}
+ const[x,y]=w2(e),p=hit(x,y);
+ const now=Date.now();let t=drag&&drag.p;
+ if(!t&&rotT&&now-rotT.t<1200&&!rotT.p.lock&&Math.hypot(x-rotT.p.x,y-rotT.p.y)<=Math.hypot(cw,ch)/2)t=rotT.p; // 回転中は中心〜角の円内なら同じピースを回し続ける
+ if(!t)t=p;
+ if(t){rotT={p:t,t:now};rotA(t,Math.sign(e.deltaY)*Math.PI/6)}
+ draw()},{passive:false});
+
+function newGame(){const N=LEVELS[level];rows=Math.max(2,Math.round(Math.sqrt(N*PH/PW)));cols=Math.max(2,Math.round(rows*PW/PH));build();scatter();fit();anims.length=0;guideLeft=3;guideUntil=0;guideUI();t0=Date.now();done=false;assembled=false;complete=false;fade=0;$('win').hidden=true;upd()}
+const zoom=k=>{cam.z=Math.min(4,Math.max(.1,cam.z*k));draw()};
+$('again').onclick=newGame;$('fit').onclick=fit;
+$('gd').onclick=()=>{if(guideLeft<=0||Date.now()<guideUntil)return;guideLeft--;guideUntil=Date.now()+3000;guideUI();
+ (function g(){draw();if(Date.now()<guideUntil)requestAnimationFrame(g)})()};$('bgb').onclick=()=>{bgi=(bgi+1)%BGS.length;BG=BGS[bgi];document.documentElement.style.setProperty('--bg',BG.c);$('bgb').textContent='背景:'+BG.n;draw()};
+$('zi').onclick=()=>zoom(1.25);$('zo').onclick=()=>zoom(.8);
+$('pick').onclick=()=>$('f').click();
+function load(file){if(!file)return;const im=new Image();im.onload=()=>{setImage(im);newGame()};im.src=URL.createObjectURL(file)}
+$('f').onchange=e=>load(e.target.files[0]);
+addEventListener('dragover',e=>e.preventDefault());addEventListener('drop',e=>{e.preventDefault();load(e.dataTransfer.files[0])});
+addEventListener('resize',resize);
+document.documentElement.style.setProperty('--bg',BG.c);
+resize();setImage(demo());newGame();
+</script></body></html>
