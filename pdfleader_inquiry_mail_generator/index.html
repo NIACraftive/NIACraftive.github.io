@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDFLeader 返金・解約依頼メール作成</title>
+<style>
+:root{color-scheme:light;--ink:#202733;--muted:#5e6877;--line:#d9dee7;--accent:#2359a8;--bg:#f5f7fb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans JP",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
+main{max-width:900px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:clamp(1.45rem,4vw,2rem);line-height:1.35;margin:0 0 8px}
+.lead{color:var(--muted);margin:0 0 22px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0}
+label{display:block;font-weight:700;margin-bottom:7px}
+input,textarea{font:inherit;width:100%;border:1px solid #b9c2d0;border-radius:9px;padding:11px 12px;background:#fff;color:var(--ink)}
+textarea{min-height:430px;resize:vertical;white-space:pre-wrap}
+.help{font-size:.92rem;color:var(--muted);margin:6px 0 0}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+button{font:inherit;font-weight:700;border:1px solid var(--accent);border-radius:9px;padding:10px 15px;cursor:pointer}
+.primary{background:var(--accent);color:white}.secondary{background:white;color:var(--accent)}
+.notice{border-left:4px solid #d59a28;padding:10px 13px;background:#fff8e8;border-radius:5px}
+footer{font-size:.88rem;color:var(--muted);margin-top:20px}
+@media(max-width:560px){main{padding:18px 12px 32px}.panel{padding:15px}textarea{min-height:500px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>PDFLeader 返金・解約依頼メール作成</h1>
+  <p class="lead">メールアドレスを入力すると、返金・解約を求める英文メールを作成します。内容を確認してから、ご自身のメールアプリで送信してください。</p>
+
+  <section class="panel">
+    <label for="email">PDFLeaderに登録した可能性のあるメールアドレス（任意）</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+    <p class="help">心当たりがあるアドレスを入力してください。空欄でも作成できます。入力内容はこのページ内でメール文面に反映され、外部には送信されません。</p>
+    <div class="actions">
+      <button class="primary" id="generate" type="button">メール文面を作成・更新</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <label for="mail">作成された英文メール（必要に応じて編集できます）</label>
+    <textarea id="mail" spellcheck="false" aria-label="英文メール本文"></textarea>
+    <div class="actions">
+      <button class="primary" id="copy" type="button">文面をコピー</button>
+      <button class="secondary" id="select" type="button">全文を選択</button>
+    </div>
+    <p id="status" class="help" aria-live="polite"></p>
+  </section>
+
+  <section class="panel">
+    <div class="notice"><strong>送信前に確認してください</strong><br>実際の請求状況に合うように内容を確認・編集してください。カード番号全桁、セキュリティコード、暗証番号、パスワードはメールに記載しないでください。</div>
+  </section>
+
+  <footer>このページは個人用の英文テンプレートです。PDFLeaderの公式ページではなく、返金や解約の結果を保証するものではありません。送信・問い合わせはご自身で行ってください。</footer>
+</main>
+<script>
+(function(){
+  const email = document.getElementById('email');
+  const mail = document.getElementById('mail');
+  const status = document.getElementById('status');
+
+  function buildEmail(address) {
+    const accountLine = address.trim()
+      ? 'The email address that may be associated with my account is: ' + address.trim() + '.'
+      : 'Please search for my account using the billing details available to you. If you need further information to locate the transaction, please tell me exactly what information is required.';
+    return `Subject: Urgent Request for Refund and Subscription Cancellation
+
+Dear PDFLeader Customer Support,
+
+I am contacting you to formally request a full refund for the charge(s) associated with a subscription that I did not knowingly agree to, and to ensure that any active subscription associated with my details is cancelled immediately.
+
+Please:
+1. Refund the charge(s) related to this subscription.
+2. Confirm that the subscription has been cancelled and that no further payments or renewals will be taken.
+3. Provide written confirmation of the refund amount, the transaction(s) covered, and the expected time for the funds to be returned.
+4. Escalate this request to a billing specialist or supervisor if necessary.
+
+${accountLine}
+
+Please resolve this matter within the next one to two days. If this matter remains unresolved after that period, I will consider seeking assistance from the relevant consumer protection authorities in Japan, including my local Consumer Affairs Center, and pursuing other appropriate remedies.
+
+Please respond in writing as soon as possible.
+
+Best regards,`;
+  }
+
+  document.getElementById('generate').addEventListener('click', function(){
+    mail.value = buildEmail(email.value);
+    status.textContent = 'メール文面を更新しました。送信前に内容をご確認ください。';
+  });
+  document.getElementById('copy').addEventListener('click', async function(){
+    try {
+      await navigator.clipboard.writeText(mail.value);
+      status.textContent = '文面をコピーしました。';
+    } catch (e) {
+      mail.focus(); mail.select();
+      status.textContent = '自動コピーできないため、選択した文面を Ctrl+C でコピーしてください。';
+    }
+  });
+  document.getElementById('select').addEventListener('click', function(){
+    mail.focus(); mail.select();
+    status.textContent = '全文を選択しました。Ctrl+C でコピーできます。';
+  });
+  mail.value = buildEmail('');
+})();
+</script>
+</body>
+</html>
