@@ -125,6 +125,32 @@ button{font:inherit;font-weight:700;border:1px solid var(--accent);border-radius
   </section>
 
   <section class="panel">
+    <span class="step">STEP 3</span>
+    <h2>最終通知：返金に応じない場合の相談・申し立て予告</h2>
+    <p class="section-intro">STEP 2でも返金に応じない場合に使う文面です。相談先への連絡準備と、取引記録等を提出する意思を伝えます。</p>
+    <label for="finalEmail">PDFLeaderのアカウントメールアドレス</label>
+    <input id="finalEmail" type="email" placeholder="you@example.com" autocomplete="email">
+    <p class="help">メールアドレス以外の入力は不要です。名前は署名に含めず、入力したアドレスのみを記載します。</p>
+    <div class="actions"><button class="primary" id="generateFinal" type="button">STEP 3の最終通知メールを作成・更新</button></div>
+    <label for="finalMail">英文メール（コピー・編集用）</label>
+    <textarea id="finalMail" spellcheck="false" aria-label="最終通知英文メール本文"></textarea>
+    <div class="actions"><button class="primary" id="copyFinal" type="button">英文をコピー</button><button class="secondary" id="selectFinal" type="button">英文を全文選択</button></div>
+    <p id="finalStatus" class="help" aria-live="polite"></p>
+    <h3>日本語訳（確認用）</h3>
+    <div class="panel translation" id="translation3">
+      PDFLeader サポートチーム御中
+
+      返金請求および継続課金に関する問題について、改めてご連絡します。私は、サービスを1回限りのPDF変換サービスと認識しており、継続課金の条件は十分に明確ではありませんでした。争いのある請求について、返金を正式に求めます。
+
+      7暦日以内に返金についての具体的な回答が得られない場合、日本の消費者保護・決済関連の適切な窓口への相談や申し立てを進める準備をしています。相談先の候補には、消費者ホットライン（188）および地域の消費生活センター、海外事業者との取引を扱う消費者相談窓口、関係する行政機関、今回利用した決済サービス・カードの発行元、状況に応じた警察相談窓口、必要に応じた法律相談窓口が含まれます。
+
+      取引記録、請求情報、これまでのメールのやり取りを、相談や申し立ての資料として提出できるよう準備しています。これらの窓口すべてに相談済みであると主張するものではありません。
+
+      さらなる手続きに進む前に、返金請求を再検討し、継続課金の契約上の根拠について具体的な書面回答をお願いします。
+    </div>
+  </section>
+
+  <section class="panel">
     <div class="notice"><strong>送信前の確認</strong><br>入力した情報と事実関係が正しいか確認してください。契約時の認識については、実際に自分が認識していた内容だけを選んでください。カード番号全桁、セキュリティコード、暗証番号、パスワードは記載しないでください。</div>
   </section>
   <footer>このページは個人用の英文テンプレートです。PDFLeaderの公式ページではなく、返金や解約の結果を保証するものではありません。入力情報はこのページ内の処理にのみ使用され、外部送信・保存は行いません。送信・問い合わせはご自身で行ってください。</footer>
@@ -200,6 +226,32 @@ Sincerely,
 ${name}
 ${address}`;
   }
+  function buildFinalEmail() {
+    const address = $('finalEmail').value.trim() || '[Account Email Address]';
+    return `Subject: Final Notice: Formal Refund Request and Dispute of Recurring Charges
+
+Dear PDFLeader Support Team,
+
+I am writing again regarding my refund request and the recurring subscription charges associated with my account. I understood the service to be a one-time PDF conversion service, and the recurring billing terms were not sufficiently clear to me. I formally request a refund of the disputed charge(s).
+
+If I do not receive a substantive response regarding my refund within seven calendar days of receiving this email, I am preparing to escalate the matter through appropriate consumer protection and payment dispute channels in Japan, as applicable. These may include:
+
+- The Consumer Hotline (188) and the relevant local consumer affairs center
+- Consumer consultation services that handle disputes involving overseas businesses
+- Relevant consumer protection and government agencies
+- The payment service provider or card issuer used for the transaction
+- The relevant police consultation service, if the circumstances warrant it
+- Legal consultation services, if necessary
+
+I am preparing the relevant transaction records, billing information, and correspondence to support any such consultations or complaints. This is notice of my intention to seek assistance where appropriate; I am not claiming that I have already contacted every organization listed above.
+
+Before this matter is escalated further, I strongly encourage PDFLeader to reconsider my refund request and provide a substantive written explanation of the contractual basis for the disputed recurring charges. Please also confirm that the subscription has been cancelled and that no further charges will be made.
+
+I look forward to your written response within seven calendar days.
+
+Sincerely,
+${address}`;
+  }
   for (let m = 1; m <= 12; m++) {
     const option = document.createElement('option');
     option.value = String(m);
@@ -223,11 +275,6 @@ ${address}`;
   }
   $('billMonth').addEventListener('change', refreshDays);
   $('billYear').addEventListener('change', refreshDays);
-  // Keep the date controls near the middle of the viewport so native dropdowns
-  // have room to open below the field whenever the browser allows it.
-  ['billYear','billMonth','billDay'].forEach(id => $(id).addEventListener('focus', function() {
-    this.scrollIntoView({ block: 'center', behavior: 'auto' });
-  }));
   refreshDays();
   ['givenName','familyName'].forEach(id => $(id).addEventListener('input', function() {
     this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '');
@@ -241,6 +288,10 @@ ${address}`;
   $('generateStrong').addEventListener('click', function(){ $('strongMail').value = buildStrongEmail(); $('strongStatus').textContent = '再要求メールを更新しました。事実関係を確認してください。'; });
   $('copyStrong').addEventListener('click', async function(){ try { await navigator.clipboard.writeText($('strongMail').value); $('strongStatus').textContent = '再要求メールをコピーしました。'; } catch(e) { $('strongMail').focus(); $('strongMail').select(); $('strongStatus').textContent = '自動コピーできないため、Ctrl+C でコピーしてください。'; } });
   $('selectStrong').addEventListener('click', function(){ $('strongMail').focus(); $('strongMail').select(); $('strongStatus').textContent = '英文を全文選択しました。Ctrl+C でコピーできます。'; });
+  $('generateFinal').addEventListener('click', function(){ $('finalMail').value = buildFinalEmail(); $('finalStatus').textContent = 'STEP 3の文面を更新しました。事実関係を確認してください。'; });
+  $('copyFinal').addEventListener('click', async function(){ try { await navigator.clipboard.writeText($('finalMail').value); $('finalStatus').textContent = '英文をコピーしました。'; } catch(e) { $('finalMail').focus(); $('finalMail').select(); $('finalStatus').textContent = '自動コピーできないため、Ctrl+C でコピーしてください。'; } });
+  $('selectFinal').addEventListener('click', function(){ $('finalMail').focus(); $('finalMail').select(); $('finalStatus').textContent = '英文を全文選択しました。Ctrl+C でコピーできます。'; });
+  $('finalMail').value = buildFinalEmail();
   mail.value = buildEmail('');
   $('strongMail').value = buildStrongEmail();
 })();
